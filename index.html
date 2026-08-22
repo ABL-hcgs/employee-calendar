@@ -31,7 +31,21 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
-        body { background-color: #f8fafc; color: #0f172a; }
+        /* PENGATURAN BACKGROUND IMAGE KUSTOM */
+        body { 
+            background-color: #f8fafc; 
+            color: #0f172a; 
+            background-image: url('https://i.ibb.co.com/BH4L0grj/background-2.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        
+        /* Efek kaca (Glassmorphism) agar konten tetap terbaca di atas background */
+        #app-wrapper {
+            background-color: rgba(248, 250, 252, 0.92);
+            backdrop-filter: blur(8px);
+        }
         
         /* Custom Scrollbar */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -42,7 +56,7 @@
         /* Modals */
         .modal-overlay { 
             opacity: 0; pointer-events: none; transition: all 0.3s ease; 
-            background-color: rgba(15, 23, 42, 0.4); backdrop-filter: blur(2px);
+            background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
         }
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
         .modal-content { transform: scale(0.95) translateY(10px); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -59,11 +73,11 @@
 
 <body class="h-screen overflow-hidden text-slate-800 antialiased selection:bg-brand-100 selection:text-brand-900 relative">
 
-    <!-- MAIN APP WRAPPER (Now default visible) -->
+    <!-- MAIN APP WRAPPER -->
     <div id="app-wrapper" class="h-full flex flex-col transition-opacity duration-500">
         
         <!-- HEADER -->
-        <header class="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8 z-10 flex-shrink-0">
+        <header class="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-8 z-10 flex-shrink-0 shadow-sm">
             <!-- Brand Logo -->
             <div class="flex items-center gap-2">
                 <div class="relative flex items-center justify-center w-8 h-8">
@@ -83,107 +97,73 @@
             <!-- Header Right Actions -->
             <div class="flex items-center gap-5">
                 <!-- Sync Status -->
-                <div class="flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full bg-slate-100 border border-slate-200">
+                <div class="flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm">
                     <div id="syncIndicator" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></div>
                     <span id="syncText" class="text-slate-600">Connecting...</span>
                 </div>
 
-                <div class="h-8 w-px bg-slate-200"></div>
+                <div class="h-8 w-px bg-slate-300"></div>
 
                 <!-- Admin Access Toggle -->
-                <button id="authBtn" onclick="openAdminLogin()" class="text-sm font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg hover:bg-slate-200 transition-colors flex items-center gap-1.5">
-                    <i class="ph-bold ph-lock-key"></i> Admin Access
+                <button id="authBtn" onclick="openAdminLogin()" class="text-sm font-semibold text-slate-700 bg-white shadow-sm border border-slate-200 px-4 py-2 rounded-xl hover:bg-slate-50 hover:text-brand-600 transition-all flex items-center gap-2">
+                    <i class="ph-bold ph-lock-key"></i> Login
                 </button>
             </div>
         </header>
 
         <!-- DASHBOARD CONTENT (2 Columns) -->
-        <main class="flex-1 overflow-y-auto custom-scrollbar p-6 bg-slate-50">
-            <div class="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6 h-full">
+        <main class="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6">
+            <div class="max-w-[1400px] mx-auto flex flex-col lg:flex-row gap-6 h-full">
                 
                 <!-- LEFT COLUMN (Main Calendar) -->
                 <div class="flex-1 flex flex-col gap-6 min-w-0">
                     
                     <!-- Dynamic Greeting -->
                     <div>
-                        <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-2">
-                            <span id="greetingText">Good Morning</span>, <span id="welcomeName" class="text-brand-600">Team</span>! <span class="animate-bounce">👋</span>
+                        <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-2 drop-shadow-sm">
+                            <span id="greetingText">Good Morning</span>, <span id="welcomeName" class="text-brand-600">Guest</span>! <span class="animate-bounce">👋</span>
                         </h1>
-                        <p class="text-slate-500 mt-1">Here's what's happening with your people this month.</p>
-                    </div>
-
-                    <!-- Metrics Grid (3 Items only) -->
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
-                            <div class="flex justify-between items-start">
-                                <div class="w-10 h-10 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center text-xl"><i class="ph-fill ph-cake"></i></div>
-                                <h3 class="text-3xl font-bold text-slate-900" id="stat-birthdays">0</h3>
-                            </div>
-                            <div class="mt-4">
-                                <p class="text-sm font-semibold text-slate-700">Birthdays</p>
-                                <p class="text-xs text-slate-400">This Month</p>
-                            </div>
-                        </div>
-                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
-                            <div class="flex justify-between items-start">
-                                <div class="w-10 h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center text-xl"><i class="ph-fill ph-beach-tent"></i></div>
-                                <h3 class="text-3xl font-bold text-slate-900" id="stat-holidays">0</h3>
-                            </div>
-                            <div class="mt-4">
-                                <p class="text-sm font-semibold text-slate-700">Holiday</p>
-                                <p class="text-xs text-slate-400">This Month</p>
-                            </div>
-                        </div>
-                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
-                            <div class="flex justify-between items-start">
-                                <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl"><i class="ph-fill ph-megaphone"></i></div>
-                                <h3 class="text-3xl font-bold text-slate-900" id="stat-events">0</h3>
-                            </div>
-                            <div class="mt-4">
-                                <p class="text-sm font-semibold text-slate-700">Events Scheduled</p>
-                                <p class="text-xs text-slate-400">This Month</p>
-                            </div>
-                        </div>
+                        <p class="text-slate-600 mt-1 font-medium">Here's what's happening with your people this month.</p>
                     </div>
 
                     <!-- Calendar Area -->
-                    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col flex-1 min-h-[500px]">
+                    <div class="bg-white/90 backdrop-blur-sm border border-slate-200/60 rounded-2xl shadow-xl shadow-slate-200/50 flex flex-col flex-1 min-h-[600px] overflow-hidden">
                         
                         <!-- Calendar Toolbar -->
-                        <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4">
+                        <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4 bg-white">
                             <div class="flex items-center gap-4">
-                                <h2 id="calendar-title" class="text-lg sm:text-xl font-bold text-slate-900 min-w-[150px]">August 2026</h2>
-                                <div class="flex items-center bg-slate-100 rounded-lg p-1">
+                                <h2 id="calendar-title" class="text-xl sm:text-2xl font-extrabold text-slate-900 min-w-[180px]">August 2026</h2>
+                                <div class="flex items-center bg-slate-100 rounded-lg p-1 border border-slate-200">
                                     <button onclick="changeMonth(-1)" class="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-white rounded-md transition-all shadow-sm"><i class="ph-bold ph-caret-left"></i></button>
-                                    <button onclick="resetToToday()" class="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white rounded-md transition-all shadow-sm">Today</button>
+                                    <button onclick="resetToToday()" class="px-4 py-1.5 text-sm font-bold text-slate-700 hover:text-slate-900 hover:bg-white rounded-md transition-all shadow-sm">Today</button>
                                     <button onclick="changeMonth(1)" class="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-white rounded-md transition-all shadow-sm"><i class="ph-bold ph-caret-right"></i></button>
                                 </div>
                             </div>
                             
                             <!-- Admin Buttons -->
                             <div id="adminControls" class="flex gap-2 hidden">
-                                <button onclick="importPublicHolidays()" class="px-3 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-200 transition-colors flex items-center gap-1.5">
-                                    <i class="ph-bold ph-calendar-plus"></i> <span class="hidden sm:inline">Import Holiday</span>
+                                <button onclick="importPublicHolidays()" class="px-4 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-50 hover:text-brand-600 transition-all flex items-center gap-2 shadow-sm">
+                                    <i class="ph-bold ph-calendar-plus text-lg"></i> <span class="hidden sm:inline">Import Holiday</span>
                                 </button>
-                                <button onclick="openAddModal()" class="px-3 py-2 bg-brand-600 text-white rounded-lg text-sm font-semibold hover:bg-brand-700 shadow-sm transition-all flex items-center gap-1.5">
-                                    <i class="ph-bold ph-plus"></i> Add Event
+                                <button onclick="openAddModal()" class="px-4 py-2.5 bg-brand-600 text-white rounded-xl text-sm font-bold hover:bg-brand-700 shadow-md shadow-brand-500/30 transition-all flex items-center gap-2">
+                                    <i class="ph-bold ph-plus text-lg"></i> Add Event
                                 </button>
                             </div>
                         </div>
 
                         <!-- Days Header -->
                         <div class="grid grid-cols-7 border-b border-slate-100 bg-slate-50/80">
-                            <div class="py-3 text-center text-[10px] sm:text-xs font-bold text-slate-500 tracking-wider">SUN</div>
-                            <div class="py-3 text-center text-[10px] sm:text-xs font-bold text-slate-500 tracking-wider">MON</div>
-                            <div class="py-3 text-center text-[10px] sm:text-xs font-bold text-slate-500 tracking-wider">TUE</div>
-                            <div class="py-3 text-center text-[10px] sm:text-xs font-bold text-slate-500 tracking-wider">WED</div>
-                            <div class="py-3 text-center text-[10px] sm:text-xs font-bold text-slate-500 tracking-wider">THU</div>
-                            <div class="py-3 text-center text-[10px] sm:text-xs font-bold text-slate-500 tracking-wider">FRI</div>
-                            <div class="py-3 text-center text-[10px] sm:text-xs font-bold text-slate-500 tracking-wider">SAT</div>
+                            <div class="py-3 text-center text-xs font-extrabold text-slate-500 tracking-wider">SUN</div>
+                            <div class="py-3 text-center text-xs font-extrabold text-slate-500 tracking-wider">MON</div>
+                            <div class="py-3 text-center text-xs font-extrabold text-slate-500 tracking-wider">TUE</div>
+                            <div class="py-3 text-center text-xs font-extrabold text-slate-500 tracking-wider">WED</div>
+                            <div class="py-3 text-center text-xs font-extrabold text-slate-500 tracking-wider">THU</div>
+                            <div class="py-3 text-center text-xs font-extrabold text-slate-500 tracking-wider">FRI</div>
+                            <div class="py-3 text-center text-xs font-extrabold text-slate-500 tracking-wider">SAT</div>
                         </div>
 
                         <!-- Calendar Grid Base -->
-                        <div id="calendar-grid" class="grid grid-cols-7 flex-1 auto-rows-fr bg-slate-200 gap-px border-b border-slate-200 rounded-b-2xl overflow-hidden">
+                        <div id="calendar-grid" class="grid grid-cols-7 flex-1 auto-rows-fr bg-slate-100 gap-px">
                             <!-- JS Will Inject Grid Here -->
                         </div>
                     </div>
@@ -193,50 +173,50 @@
                 <div class="w-full lg:w-80 flex flex-col gap-6 flex-shrink-0">
                     
                     <!-- Summary List -->
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="font-bold text-slate-900">Summary</h3>
-                            <span id="summary-month-text" class="text-xs text-brand-600 font-bold bg-brand-50 px-2.5 py-1 rounded-md">This Month</span>
+                    <div class="bg-white/90 backdrop-blur-sm p-6 rounded-2xl border border-slate-200/60 shadow-xl shadow-slate-200/50">
+                        <div class="flex justify-between items-center mb-5">
+                            <h3 class="text-lg font-extrabold text-slate-900">Summary</h3>
+                            <span id="summary-month-text" class="text-xs text-brand-700 font-bold bg-brand-50 border border-brand-100 px-3 py-1 rounded-lg">This Month</span>
                         </div>
                         
-                        <div class="space-y-2">
-                            <div class="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100">
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-orange-200 transition-colors">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-lg bg-orange-50 text-orange-500 flex items-center justify-center"><i class="ph-fill ph-cake"></i></div>
-                                    <span class="text-sm font-semibold text-slate-700">Birthdays</span>
+                                    <div class="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center text-lg shadow-inner"><i class="ph-fill ph-cake"></i></div>
+                                    <span class="text-sm font-bold text-slate-700">Birthdays</span>
                                 </div>
-                                <span class="text-sm font-bold text-slate-900" id="sum-birthdays">0</span>
+                                <span class="text-lg font-extrabold text-slate-900" id="sum-birthdays">0</span>
                             </div>
-                            <div class="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100">
+                            <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-green-200 transition-colors">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-lg bg-green-50 text-green-600 flex items-center justify-center"><i class="ph-fill ph-beach-tent"></i></div>
-                                    <span class="text-sm font-semibold text-slate-700">Holiday</span>
+                                    <div class="w-10 h-10 rounded-xl bg-green-100 text-green-600 flex items-center justify-center text-lg shadow-inner"><i class="ph-fill ph-beach-tent"></i></div>
+                                    <span class="text-sm font-bold text-slate-700">Holiday</span>
                                 </div>
-                                <span class="text-sm font-bold text-slate-900" id="sum-holidays">0</span>
+                                <span class="text-lg font-extrabold text-slate-900" id="sum-holidays">0</span>
                             </div>
-                            <div class="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100">
+                            <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-blue-200 transition-colors">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><i class="ph-fill ph-megaphone"></i></div>
-                                    <span class="text-sm font-semibold text-slate-700">Events</span>
+                                    <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-lg shadow-inner"><i class="ph-fill ph-megaphone"></i></div>
+                                    <span class="text-sm font-bold text-slate-700">Events</span>
                                 </div>
-                                <span class="text-sm font-bold text-slate-900" id="sum-events">0</span>
+                                <span class="text-lg font-extrabold text-slate-900" id="sum-events">0</span>
                             </div>
                         </div>
                     </div>
 
                     <!-- Donut Chart -->
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                        <h3 class="font-bold text-slate-900 mb-4">Event Types Breakdown</h3>
+                    <div class="bg-white/90 backdrop-blur-sm p-6 rounded-2xl border border-slate-200/60 shadow-xl shadow-slate-200/50">
+                        <h3 class="text-lg font-extrabold text-slate-900 mb-4">Event Types</h3>
                         <div class="relative w-full h-48 flex items-center justify-center">
-                            <p id="chart-fallback" class="absolute text-sm font-medium text-slate-400 hidden">No data for this month</p>
+                            <p id="chart-fallback" class="absolute text-sm font-semibold text-slate-400 hidden">No data for this month</p>
                             <canvas id="eventDonutChart"></canvas>
                         </div>
                     </div>
 
                     <!-- Upcoming Events -->
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex-1">
-                        <h3 class="font-bold text-slate-900 mb-4 flex items-center gap-2">
-                            <i class="ph-bold ph-calendar-star text-brand-500"></i> Upcoming
+                    <div class="bg-white/90 backdrop-blur-sm p-6 rounded-2xl border border-slate-200/60 shadow-xl shadow-slate-200/50 flex-1">
+                        <h3 class="text-lg font-extrabold text-slate-900 mb-4 flex items-center gap-2">
+                            <i class="ph-bold ph-calendar-star text-brand-500 text-xl"></i> Upcoming Events
                         </h3>
                         <div id="upcomingEventsList" class="space-y-3">
                             <!-- JS will inject upcoming events here -->
@@ -247,20 +227,29 @@
         </main>
     </div>
 
-    <!-- MODAL: ADMIN LOGIN -->
+    <!-- MODAL: ADMIN LOGIN (Updated with Username) -->
     <div id="adminLoginModal" class="modal-overlay fixed inset-0 z-[70] flex items-center justify-center p-4">
-        <div class="modal-content bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full border border-slate-100">
-            <div class="w-12 h-12 bg-slate-100 text-slate-700 rounded-full flex items-center justify-center text-2xl mb-4">
-                <i class="ph-fill ph-lock-key"></i>
+        <div class="modal-content bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full border border-slate-100 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-brand-500 to-orange-400"></div>
+            
+            <div class="w-16 h-16 bg-brand-50 text-brand-600 rounded-2xl flex items-center justify-center text-3xl mb-6 shadow-inner">
+                <i class="ph-fill ph-identification-badge"></i>
             </div>
-            <h3 class="text-lg font-bold text-slate-900 mb-2">Admin Access</h3>
-            <p class="text-sm text-slate-500 mb-4">Enter password to add, edit, or remove events.</p>
+            <h3 class="text-2xl font-extrabold text-slate-900 mb-2">Login User</h3>
+            <p class="text-sm text-slate-500 mb-6 font-medium">Please enter your username and password to gain full access.</p>
             
             <form onsubmit="submitAdminLogin(event)" class="space-y-4">
-                <input type="password" id="adminPasswordInput" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none transition-all" placeholder="Password (admin123)">
-                <div class="flex gap-3">
-                    <button type="button" onclick="closeAdminLogin()" class="flex-1 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-50 transition-colors">Cancel</button>
-                    <button type="submit" class="flex-1 py-2.5 bg-brand-600 text-white rounded-xl text-sm font-bold shadow-md shadow-brand-500/30 hover:bg-brand-700 transition-colors">Unlock</button>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Username</label>
+                    <input type="text" id="adminUsernameInput" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-brand-500 outline-none transition-all" placeholder="e.g. Admin">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Password</label>
+                    <input type="password" id="adminPasswordInput" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-brand-500 outline-none transition-all" placeholder="••••••••">
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="closeAdminLogin()" class="flex-1 py-3 bg-white border border-slate-300 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-50 transition-colors shadow-sm">Cancel</button>
+                    <button type="submit" id="btnLogin" class="flex-1 py-3 bg-brand-600 text-white rounded-xl text-sm font-bold shadow-md shadow-brand-500/30 hover:bg-brand-700 transition-colors flex justify-center items-center gap-2">Login</button>
                 </div>
             </form>
         </div>
@@ -268,30 +257,32 @@
 
     <!-- MODAL: ADD / EDIT EVENT -->
     <div id="eventModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="modal-content bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col max-h-[90vh]">
-            <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-2xl">
-                <h3 class="text-lg font-bold text-slate-900" id="modalTitle">Create New Event</h3>
-                <button onclick="closeModals()" class="text-slate-400 hover:text-slate-700 bg-white border border-slate-200 rounded-full p-1.5 shadow-sm transition-all"><i class="ph-bold ph-x text-lg"></i></button>
+        <div class="modal-content bg-white rounded-3xl shadow-2xl w-full max-w-md flex flex-col max-h-[90vh] border border-slate-100">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white rounded-t-3xl">
+                <h3 class="text-xl font-extrabold text-slate-900 flex items-center gap-2" id="modalTitle">
+                    <i class="ph-bold ph-calendar-plus text-brand-500"></i> Create Event
+                </h3>
+                <button onclick="closeModals()" class="text-slate-400 hover:text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-full p-2 transition-all"><i class="ph-bold ph-x text-lg"></i></button>
             </div>
             
-            <div class="p-5 overflow-y-auto custom-scrollbar">
-                <form id="eventForm" class="space-y-4">
+            <div class="p-6 overflow-y-auto custom-scrollbar">
+                <form id="eventForm" class="space-y-5">
                     <input type="hidden" id="eventId">
                     
                     <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-1">Event Title / Name</label>
-                        <input type="text" id="eventTitle" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all" placeholder="e.g. Budi Santoso">
+                        <label class="block text-sm font-bold text-slate-700 mb-1.5">Event Title / Name</label>
+                        <input type="text" id="eventTitle" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all" placeholder="e.g. Budi Santoso (if birthday)">
                     </div>
                     
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-semibold text-slate-700 mb-1">Date</label>
-                            <input type="date" id="eventDate" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none transition-all">
-                            <p class="text-[10px] text-slate-500 mt-1 font-medium">For b-day, use actual birth year.</p>
+                            <label class="block text-sm font-bold text-slate-700 mb-1.5">Date</label>
+                            <input type="date" id="eventDate" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-brand-500 outline-none transition-all">
+                            <p class="text-[10px] text-slate-500 mt-1.5 font-semibold text-brand-600"><i class="ph-fill ph-info"></i> For birthday, use actual birth year.</p>
                         </div>
                         <div>
-                            <label class="block text-sm font-semibold text-slate-700 mb-1">Category</label>
-                            <select id="eventCategory" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none transition-all">
+                            <label class="block text-sm font-bold text-slate-700 mb-1.5">Category</label>
+                            <select id="eventCategory" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-brand-500 outline-none transition-all">
                                 <option value="event">General Event</option>
                                 <option value="birthday">Birthday</option>
                                 <option value="holiday">Holiday</option>
@@ -299,16 +290,16 @@
                         </div>
                     </div>
                     
-                    <div class="bg-brand-50 p-4 rounded-xl border border-brand-100">
-                        <label class="block text-sm font-semibold text-brand-900 mb-2 flex items-center gap-1.5"><i class="ph-bold ph-envelope-simple"></i> Email Notifications</label>
+                    <div class="bg-brand-50/50 p-4 rounded-2xl border border-brand-100">
+                        <label class="block text-sm font-bold text-brand-900 mb-3 flex items-center gap-1.5"><i class="ph-fill ph-bell-ringing text-brand-500 text-lg"></i> Auto-Email Notifications</label>
                         <div class="grid grid-cols-2 gap-3">
-                            <select id="eventNotify1" class="w-full px-3 py-2.5 bg-white border border-brand-200 rounded-lg text-xs font-medium focus:ring-2 focus:ring-brand-500 outline-none">
+                            <select id="eventNotify1" class="w-full px-3 py-2.5 bg-white border border-brand-200 rounded-xl text-xs font-bold text-slate-700 focus:ring-2 focus:ring-brand-500 outline-none shadow-sm">
                                 <option value="0">No Reminder 1</option>
                                 <option value="7">7 Days Before</option>
                                 <option value="3">3 Days Before</option>
                                 <option value="1">1 Day Before</option>
                             </select>
-                            <select id="eventNotify2" class="w-full px-3 py-2.5 bg-white border border-brand-200 rounded-lg text-xs font-medium focus:ring-2 focus:ring-brand-500 outline-none">
+                            <select id="eventNotify2" class="w-full px-3 py-2.5 bg-white border border-brand-200 rounded-xl text-xs font-bold text-slate-700 focus:ring-2 focus:ring-brand-500 outline-none shadow-sm">
                                 <option value="0">No Reminder 2</option>
                                 <option value="3">3 Days Before</option>
                                 <option value="1">1 Day Before</option>
@@ -318,47 +309,47 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-1">Description (Optional)</label>
-                        <textarea id="eventDesc" rows="2" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none transition-all" placeholder="Add some notes..."></textarea>
+                        <label class="block text-sm font-bold text-slate-700 mb-1.5">Description (Optional)</label>
+                        <textarea id="eventDesc" rows="2" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-brand-500 outline-none transition-all resize-none" placeholder="Add some notes..."></textarea>
                     </div>
                 </form>
             </div>
             
-            <div class="p-5 border-t border-slate-100 flex gap-3 bg-slate-50 rounded-b-2xl">
-                <button type="button" onclick="closeModals()" class="flex-1 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-100 transition-colors shadow-sm">Cancel</button>
-                <button type="button" onclick="saveEvent()" id="btnSaveEvent" class="flex-1 py-2.5 bg-brand-600 text-white rounded-xl text-sm font-bold shadow-md shadow-brand-500/30 hover:bg-brand-700 transition-all">Save Event</button>
+            <div class="p-6 border-t border-slate-100 flex gap-3 bg-white rounded-b-3xl">
+                <button type="button" onclick="closeModals()" class="flex-1 py-3 bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-100 transition-colors">Cancel</button>
+                <button type="button" onclick="saveEvent()" id="btnSaveEvent" class="flex-1 py-3 bg-brand-600 text-white rounded-xl text-sm font-bold shadow-md shadow-brand-500/30 hover:bg-brand-700 transition-all">Save Event</button>
             </div>
         </div>
     </div>
 
     <!-- MODAL: VIEW DETAILS & ENGAGEMENT TIPS -->
     <div id="detailModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="modal-content bg-white rounded-2xl shadow-2xl w-full max-w-sm flex flex-col overflow-hidden border border-slate-100">
-            <div id="detailBanner" class="h-16 flex justify-end p-3 relative">
-                <div class="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent"></div>
-                <button onclick="closeModals()" class="relative z-10 w-8 h-8 bg-white/40 hover:bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center text-slate-800 transition-all shadow-sm"><i class="ph-bold ph-x text-sm"></i></button>
+        <div class="modal-content bg-white rounded-3xl shadow-2xl w-full max-w-sm flex flex-col overflow-hidden border border-slate-100">
+            <div id="detailBanner" class="h-20 flex justify-end p-4 relative">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                <button onclick="closeModals()" class="relative z-10 w-8 h-8 bg-white/50 hover:bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-slate-900 transition-all shadow-sm"><i class="ph-bold ph-x text-sm"></i></button>
             </div>
             
-            <div class="p-6 relative">
-                <div id="detailIconWrapper" class="absolute -top-10 left-6 w-16 h-16 rounded-2xl border-4 border-white shadow-md flex items-center justify-center text-3xl">
+            <div class="p-6 relative bg-white">
+                <div id="detailIconWrapper" class="absolute -top-10 left-6 w-16 h-16 rounded-2xl border-4 border-white shadow-lg flex items-center justify-center text-3xl">
                     <i id="detailIcon" class="ph-fill ph-calendar"></i>
                 </div>
                 
                 <div class="mt-8">
                     <div class="flex justify-between items-start">
-                        <div>
-                            <h2 id="viewTitle" class="text-xl font-bold text-slate-900 leading-tight">Title</h2>
-                            <p id="viewDate" class="text-sm font-semibold text-slate-500 mt-1 flex items-center gap-1.5"></p>
+                        <div class="pr-3">
+                            <h2 id="viewTitle" class="text-xl font-extrabold text-slate-900 leading-tight">Title</h2>
+                            <p id="viewDate" class="text-sm font-semibold text-slate-500 mt-1.5 flex items-center gap-1.5"></p>
                         </div>
-                        <span id="viewCatBadge" class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border">Cat</span>
+                        <span id="viewCatBadge" class="px-3 py-1 rounded-full text-[10px] font-extrabold tracking-wider uppercase border shadow-sm">Cat</span>
                     </div>
                     
-                    <p id="viewDesc" class="text-sm text-slate-600 mt-4 leading-relaxed bg-slate-50 p-3.5 rounded-xl border border-slate-100"></p>
+                    <p id="viewDesc" class="text-sm text-slate-600 mt-4 leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-100 font-medium"></p>
                     
                     <!-- AI Engagement Ideas -->
-                    <div class="mt-5 border border-amber-200 bg-amber-50 rounded-xl p-4 shadow-sm">
-                        <h4 class="text-xs font-bold text-amber-800 uppercase tracking-wider mb-2.5 flex items-center gap-1.5"><i class="ph-fill ph-lightbulb"></i> Engagement Ideas</h4>
-                        <ul id="viewTips" class="text-[13px] text-amber-900 space-y-1.5 list-disc pl-4 marker:text-amber-400 font-medium">
+                    <div class="mt-5 border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-5 shadow-inner">
+                        <h4 class="text-xs font-extrabold text-amber-800 uppercase tracking-wider mb-3 flex items-center gap-1.5"><i class="ph-fill ph-lightbulb text-amber-500 text-base"></i> Engagement Ideas</h4>
+                        <ul id="viewTips" class="text-[13px] text-amber-900 space-y-2 list-disc pl-4 marker:text-amber-400 font-semibold leading-snug">
                             <!-- Injected by JS -->
                         </ul>
                     </div>
@@ -366,7 +357,10 @@
             </div>
             
             <!-- ADMIN ACTIONS IN VIEW MODAL -->
-            <div id="detailActions" class="p-4 border-t border-slate-100 bg-slate-50 flex gap-2 hidden">
+            <div id="detailActions" class="p-5 border-t border-slate-100 bg-slate-50 flex flex-wrap gap-2 hidden">
+                <!-- Manual Notification Button -->
+                <button onclick="sendManualNotification()" class="w-full py-2.5 mb-1 bg-brand-100 text-brand-700 border border-brand-200 rounded-xl text-sm font-bold hover:bg-brand-200 transition-colors shadow-sm flex items-center justify-center gap-2"><i class="ph-bold ph-paper-plane-tilt"></i> Kirim Email Manual</button>
+                
                 <button onclick="editEventFromView()" class="flex-1 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-100 transition-colors shadow-sm flex items-center justify-center gap-2"><i class="ph-bold ph-pencil-simple"></i> Edit</button>
                 <button onclick="confirmDeleteEvent()" class="flex-1 py-2.5 bg-red-50 text-red-600 border border-red-200 rounded-xl text-sm font-bold hover:bg-red-100 transition-colors shadow-sm flex items-center justify-center gap-2"><i class="ph-bold ph-trash"></i> Hapus / Resign</button>
             </div>
@@ -374,34 +368,37 @@
     </div>
 
     <!-- CUSTOM CONFIRM MODAL -->
-    <div id="confirmModal" class="modal-overlay fixed inset-0 z-[60] flex items-center justify-center p-4">
-        <div class="modal-content bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full text-center border border-slate-100">
-            <div class="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
-                <i class="ph-fill ph-warning"></i>
+    <div id="confirmModal" class="modal-overlay fixed inset-0 z-[80] flex items-center justify-center p-4">
+        <div class="modal-content bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full text-center border border-slate-100">
+            <div class="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center text-4xl mx-auto mb-5 shadow-inner">
+                <i class="ph-fill ph-warning-circle"></i>
             </div>
-            <h3 class="text-lg font-bold text-slate-900 mb-2" id="confirmTitle">Are you sure?</h3>
-            <p class="text-sm text-slate-500 mb-6 font-medium" id="confirmDesc">This action cannot be undone.</p>
+            <h3 class="text-xl font-extrabold text-slate-900 mb-2" id="confirmTitle">Are you sure?</h3>
+            <p class="text-sm text-slate-500 mb-8 font-medium" id="confirmDesc">This action cannot be undone.</p>
             <div class="flex gap-3">
-                <button onclick="closeConfirmModal()" class="flex-1 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-50 transition-colors shadow-sm">Cancel</button>
-                <button id="confirmBtn" class="flex-1 py-2.5 bg-red-600 text-white rounded-xl text-sm font-bold shadow-md shadow-red-500/30 hover:bg-red-700 transition-colors">Yes, Delete</button>
+                <button onclick="closeConfirmModal()" class="flex-1 py-3 bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-100 transition-colors">Cancel</button>
+                <button id="confirmBtn" class="flex-1 py-3 bg-red-600 text-white rounded-xl text-sm font-bold shadow-md shadow-red-500/30 hover:bg-red-700 transition-colors">Yes, Delete</button>
             </div>
         </div>
     </div>
 
     <!-- TOAST NOTIFICATION CONTAINER -->
-    <div id="toast" class="toast flex items-center gap-3 bg-slate-900 text-white px-4 py-3.5 rounded-xl shadow-2xl font-semibold text-sm">
-        <i id="toastIcon" class="ph-fill ph-check-circle text-green-400 text-lg"></i>
+    <div id="toast" class="toast flex items-center gap-3 bg-slate-900 text-white px-5 py-4 rounded-2xl shadow-2xl font-bold text-sm border border-slate-700">
+        <i id="toastIcon" class="ph-fill ph-check-circle text-green-400 text-xl"></i>
         <span id="toastMsg">Message</span>
     </div>
 
     <script>
-        const API_URL = 'https://sheetdb.io/api/v1/cyziqs13034aa';
+        // --- KONFIGURASI DATABASE ---
+        const API_BASE_URL = 'https://sheetdb.io/api/v1/tbbz47b2kd1t8'; 
+        
         let events = [];
-        let currentDate = new Date(2026, 7, 1); // Default August 2026 for consistency
+        let currentDate = new Date(2026, 7, 1); 
         let isFetching = false;
         let chartInstance = null;
         let currentViewingEventId = null;
         
+        let currentUser = null; 
         let isAdmin = false;
 
         const categoryMap = {
@@ -411,71 +408,180 @@
         };
 
         window.onload = () => {
-            // Check admin status from previous session
-            isAdmin = localStorage.getItem('pc_is_admin') === 'true';
+            const savedUser = localStorage.getItem('pc_username');
+            
+            if (savedUser) {
+                currentUser = savedUser;
+                isAdmin = true; // All logged in users are admins
+            }
+            
             updateAuthUI();
             setGreeting();
             fetchEvents();
         };
 
-        function setGreeting() {
-            const hour = new Date().getHours();
-            let greeting = "Good Evening";
-            if (hour < 12) greeting = "Good Morning";
-            else if (hour < 17) greeting = "Good Afternoon";
-            document.getElementById('greetingText').textContent = greeting;
-        }
-
+        // --- SISTEM LOGIN & LOGGING ---
         function updateAuthUI() {
             const adminControls = document.getElementById('adminControls');
             const authBtn = document.getElementById('authBtn');
             const welcomeName = document.getElementById('welcomeName');
 
-            if (isAdmin) {
-                adminControls.classList.remove('hidden');
+            if (currentUser) {
+                welcomeName.textContent = currentUser;
                 authBtn.innerHTML = '<i class="ph-bold ph-sign-out"></i> Log Out';
                 authBtn.onclick = handleLogout;
-                authBtn.className = "text-sm font-semibold text-red-600 bg-red-50 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors flex items-center gap-1.5";
-                welcomeName.textContent = "Admin";
+                authBtn.className = "text-sm font-bold text-red-600 bg-white border border-red-200 px-4 py-2 rounded-xl hover:bg-red-50 transition-all flex items-center gap-2 shadow-sm";
+                adminControls.classList.remove('hidden');
             } else {
+                welcomeName.textContent = "Guest";
                 adminControls.classList.add('hidden');
-                authBtn.innerHTML = '<i class="ph-bold ph-lock-key"></i> Admin Access';
+                authBtn.innerHTML = '<i class="ph-bold ph-lock-key"></i> Login';
                 authBtn.onclick = openAdminLogin;
-                authBtn.className = "text-sm font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg hover:bg-slate-200 transition-colors flex items-center gap-1.5 border border-slate-200";
-                welcomeName.textContent = "Team";
+                authBtn.className = "text-sm font-bold text-slate-700 bg-white border border-slate-200 px-4 py-2 rounded-xl hover:bg-slate-50 hover:text-brand-600 transition-all flex items-center gap-2 shadow-sm";
             }
         }
 
         function openAdminLogin() {
+            document.getElementById('adminUsernameInput').value = '';
             document.getElementById('adminPasswordInput').value = '';
             document.getElementById('adminLoginModal').classList.add('active');
-            setTimeout(() => document.getElementById('adminPasswordInput').focus(), 100);
+            setTimeout(() => document.getElementById('adminUsernameInput').focus(), 100);
         }
         
         function closeAdminLogin() {
             document.getElementById('adminLoginModal').classList.remove('active');
         }
 
-        function submitAdminLogin(e) {
+        async function submitAdminLogin(e) {
             e.preventDefault();
-            const pass = document.getElementById('adminPasswordInput').value;
-            if (pass === 'admin123') {
-                isAdmin = true;
-                localStorage.setItem('pc_is_admin', 'true');
-                closeAdminLogin();
-                updateAuthUI();
-                showToast("Logged in as Admin!");
-            } else {
-                showToast("Incorrect password", "error");
+            const btn = document.getElementById('btnLogin');
+            btn.innerHTML = '<i class="ph-bold ph-spinner animate-spin"></i> Checking...';
+            btn.disabled = true;
+
+            const userVal = document.getElementById('adminUsernameInput').value.trim();
+            const passVal = document.getElementById('adminPasswordInput').value;
+            
+            try {
+                const res = await fetch(`${API_BASE_URL}?sheet=User`);
+                let users = [];
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    if (!data.error) users = data;
+                }
+                
+                // Fallback for demo if 'User' sheet is not found
+                if (users.length === 0 || users.error) {
+                    users = [{ User: 'Admin', Password: 'admin123' }];
+                }
+                
+                const validUser = users.find(u => 
+                    u.User && u.User.toLowerCase() === userVal.toLowerCase() && 
+                    u.Password === passVal
+                );
+                
+                if (validUser) {
+                    currentUser = validUser.User;
+                    isAdmin = true; // All authenticated users are admins
+                    
+                    localStorage.setItem('pc_username', currentUser);
+                    
+                    closeAdminLogin();
+                    updateAuthUI();
+                    setGreeting();
+                    showToast(`Welcome back, ${currentUser}!`);
+                } else {
+                    showToast("Username atau password salah", "error");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("Terjadi kesalahan koneksi.", "error");
+            } finally {
+                btn.innerHTML = 'Login';
+                btn.disabled = false;
             }
         }
 
         function handleLogout() {
+            currentUser = null;
             isAdmin = false;
-            localStorage.removeItem('pc_is_admin');
+            localStorage.removeItem('pc_username');
             updateAuthUI();
-            closeModals(); // Close any open edit windows just in case
+            setGreeting();
+            closeModals(); 
             showToast("Logged out successfully");
+        }
+        
+        async function logAction(actionType, detailString) {
+            if(!currentUser) return;
+            const payload = {
+                Timestamp: new Date().toISOString(),
+                User: currentUser,
+                Action: actionType,
+                Details: detailString
+            };
+            try {
+                await fetch(`${API_BASE_URL}?sheet=Log`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: [payload] })
+                });
+            } catch(e) {
+                console.error("Gagal mencatat log:", e);
+            }
+        }
+
+        // --- SISTEM NOTIFIKASI MANUAL ---
+        async function sendManualNotification() {
+            if(!isAdmin) return;
+            
+            const evt = events.find(e => e.id === currentViewingEventId);
+            if(!evt) return;
+
+            const btn = event.currentTarget;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="ph-bold ph-spinner animate-spin"></i> Menyiapkan...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`${API_BASE_URL}?sheet=Email`);
+                const emailsData = await res.json();
+                
+                const bccList = emailsData.map(e => e.email).filter(e => e && e.trim() !== "").join(',');
+                
+                if(!bccList) {
+                    showToast("Tidak ada email di Tab 'Email'", "error");
+                    return;
+                }
+
+                const dateDisplay = evt.category === 'birthday' 
+                    ? formatDisplayDate(`${currentDate.getFullYear()}-${evt.date.substr(5)}`)
+                    : formatDisplayDate(evt.date);
+                
+                const subject = encodeURIComponent(`Pengingat Event: ${evt.title}`);
+                const body = encodeURIComponent(`Halo Tim,\n\nMenginformasikan bahwa akan ada agenda berikut:\n\nNama Event: ${evt.title}\nKategori: ${evt.category.toUpperCase()}\nTanggal: ${dateDisplay}\nKeterangan: ${evt.description || '-'}\n\nSalam,\nAdmin PeopleCalendar`);
+
+                window.location.href = `mailto:?bcc=${bccList}&subject=${subject}&body=${body}`;
+                
+                logAction("MANUAL_EMAIL", `Triggered manual email for event: ${evt.title}`);
+                showToast("Aplikasi email dibuka!");
+                
+            } catch(err) {
+                console.error(err);
+                showToast("Gagal menarik data email.", "error");
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // --- CORE UI FUNCTIONS ---
+        function setGreeting() {
+            const hour = new Date().getHours();
+            let greeting = "Good Evening";
+            if (hour < 12) greeting = "Good Morning";
+            else if (hour < 17) greeting = "Good Afternoon";
+            document.getElementById('greetingText').textContent = greeting;
         }
 
         function showToast(message, type = 'success') {
@@ -485,9 +591,11 @@
             
             msg.textContent = message;
             if (type === 'error') {
-                icon.className = 'ph-fill ph-x-circle text-red-400 text-lg';
+                icon.className = 'ph-fill ph-x-circle text-red-400 text-xl';
+                toast.classList.replace('border-slate-700', 'border-red-900');
             } else {
-                icon.className = 'ph-fill ph-check-circle text-green-400 text-lg';
+                icon.className = 'ph-fill ph-check-circle text-green-400 text-xl';
+                toast.classList.replace('border-red-900', 'border-slate-700');
             }
             
             toast.classList.add('show');
@@ -516,17 +624,22 @@
             return d.toLocaleDateString('en-GB', options);
         }
 
+        // --- FETCH & RENDER DATA ---
         async function fetchEvents() {
             if(isFetching) return;
             isFetching = true;
             setSyncStatus('syncing');
             
             try {
-                const response = await fetch(`${API_URL}?t=${new Date().getTime()}`);
+                const response = await fetch(`${API_BASE_URL}?t=${new Date().getTime()}`);
                 if (!response.ok) throw new Error('API Response not ok');
                 const data = await response.json();
                 
-                if (Array.isArray(data) && data.length > 0 && data[0].id) {
+                if (typeof data === 'string' || data.error) {
+                    throw new Error(data.error || "API Limit reached");
+                }
+
+                if (Array.isArray(data) && data.length > 0 && (data[0].id || data[0].ID)) {
                     events = data.map(item => {
                         let cat = (item.category || item.Category || 'event').toLowerCase();
                         if (!['event', 'birthday', 'holiday'].includes(cat)) {
@@ -550,6 +663,7 @@
                 console.error("Fetch Error:", error);
                 setSyncStatus('error');
                 events = []; 
+                showToast("Gagal memuat data kalender.", "error");
             } finally {
                 isFetching = false;
                 renderCalendar();
@@ -582,23 +696,21 @@
             
             let counts = { birthday: 0, holiday: 0, event: 0 };
             
-            // Padding
             for (let i = 0; i < firstDay; i++) {
                 const div = document.createElement('div');
-                div.className = 'bg-slate-50/50 border-r border-slate-200 min-h-[90px] sm:min-h-[110px]';
+                div.className = 'bg-slate-50/40 border-r border-slate-200/50 min-h-[90px] sm:min-h-[120px]';
                 grid.appendChild(div);
             }
             
-            // Days
             for (let day = 1; day <= daysInMonth; day++) {
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
                 
                 const div = document.createElement('div');
-                div.className = `bg-white border-r border-slate-200 min-h-[90px] sm:min-h-[110px] p-1 sm:p-1.5 flex flex-col transition-colors hover:bg-slate-50 ${isToday ? 'bg-brand-50/30 ring-inset ring-2 ring-brand-500' : ''}`;
+                div.className = `bg-white border-r border-slate-200/50 min-h-[90px] sm:min-h-[120px] p-1.5 flex flex-col transition-all hover:bg-slate-50 ${isToday ? 'bg-brand-50/30 ring-inset ring-2 ring-brand-500 rounded-lg shadow-sm z-10' : ''}`;
                 
-                let headerHTML = `<div class="flex justify-between items-center px-1 mb-1">
-                    <span class="text-[10px] sm:text-xs font-bold ${isToday ? 'text-brand-600 bg-brand-100 px-1.5 py-0.5 rounded-md' : 'text-slate-600'}">${day}</span>
+                let headerHTML = `<div class="flex justify-between items-center px-1 mb-1.5">
+                    <span class="text-xs font-extrabold ${isToday ? 'text-white bg-brand-600 px-2 py-0.5 rounded-md shadow-sm' : 'text-slate-700'}">${day}</span>
                 </div>`;
                 
                 const dayEvents = events.filter(evt => {
@@ -620,8 +732,8 @@
                     const safeTitle = evt.title.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
                     
                     evHTML += `
-                    <div onclick="openEventDetails('${evt.id}', ${year})" class="text-[9px] sm:text-[10px] px-1.5 py-1 rounded cursor-pointer truncate border transition-all hover:shadow-sm flex items-center gap-1 ${cat.bg} ${cat.border} ${cat.text}" title="${safeTitle}">
-                        <i class="ph-fill ${cat.icon} flex-shrink-0"></i>
+                    <div onclick="openEventDetails('${evt.id}', ${year})" class="text-[10px] sm:text-[11px] px-2 py-1.5 rounded-lg cursor-pointer truncate border transition-all hover:shadow-md hover:-translate-y-px flex items-center gap-1.5 ${cat.bg} ${cat.border} ${cat.text}" title="${safeTitle}">
+                        <i class="ph-fill ${cat.icon} flex-shrink-0 text-sm"></i>
                         <span class="truncate font-bold">${safeTitle}</span>
                     </div>`;
                 });
@@ -630,10 +742,6 @@
                 div.innerHTML = headerHTML + evHTML;
                 grid.appendChild(div);
             }
-            
-            document.getElementById('stat-birthdays').textContent = counts.birthday;
-            document.getElementById('stat-holidays').textContent = counts.holiday;
-            document.getElementById('stat-events').textContent = counts.event;
             
             document.getElementById('sum-birthdays').textContent = counts.birthday;
             document.getElementById('sum-holidays').textContent = counts.holiday;
@@ -671,9 +779,9 @@
                         datasets: [{
                             data: dataArr,
                             backgroundColor: ['#f97316', '#16a34a', '#3b82f6'],
-                            borderWidth: 3,
+                            borderWidth: 4,
                             borderColor: '#ffffff',
-                            hoverOffset: 5
+                            hoverOffset: 8
                         }]
                     },
                     options: {
@@ -684,7 +792,14 @@
                             legend: { 
                                 display: true, 
                                 position: 'right',
-                                labels: { boxWidth: 10, usePointStyle: true, font: { family: 'Inter', size: 11, weight: '500' }, color: '#475569' }
+                                labels: { boxWidth: 12, usePointStyle: true, font: { family: 'Inter', size: 12, weight: '700' }, color: '#334155', padding: 15 }
+                            },
+                            tooltip: {
+                                backgroundColor: '#1e293b',
+                                titleFont: { family: 'Inter', size: 13 },
+                                bodyFont: { family: 'Inter', size: 13, weight: 'bold' },
+                                padding: 10,
+                                cornerRadius: 8
                             }
                         }
                     },
@@ -693,8 +808,8 @@
                         beforeDraw: function(chart) {
                             var width = chart.width, height = chart.height, ctx = chart.ctx;
                             ctx.restore();
-                            var fontSize = (height / 100).toFixed(2);
-                            ctx.font = "bold " + fontSize + "em Inter";
+                            var fontSize = (height / 110).toFixed(2);
+                            ctx.font = "900 " + fontSize + "em Inter";
                             ctx.textBaseline = "middle";
                             ctx.fillStyle = "#0f172a";
                             
@@ -705,9 +820,9 @@
                             ctx.textAlign = "center";
                             ctx.fillText(text, textX, textY);
                             
-                            ctx.font = "600 " + (fontSize/3).toFixed(2) + "em Inter";
+                            ctx.font = "700 " + (fontSize/3).toFixed(2) + "em Inter";
                             ctx.fillStyle = "#64748b";
-                            ctx.fillText("Total Events", textX, textY + 22);
+                            ctx.fillText("Total Events", textX, textY + 25);
                             ctx.save();
                         }
                     }]
@@ -744,7 +859,7 @@
             const top5 = upcoming.slice(0, 5);
 
             if (top5.length === 0) {
-                list.innerHTML = `<p class="text-sm font-medium text-slate-400 text-center py-6">No upcoming events found.</p>`;
+                list.innerHTML = `<p class="text-sm font-semibold text-slate-400 text-center py-8 bg-slate-50 rounded-xl border border-dashed border-slate-200">No upcoming events found.</p>`;
                 return;
             }
 
@@ -760,24 +875,25 @@
                 else timeStr = formatDisplayDate(evt.nextDate).split(' 20')[0]; 
 
                 list.innerHTML += `
-                    <div onclick="openEventDetails('${evt.id}', ${evt.nextDate.getFullYear()})" class="flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:border-slate-300 hover:shadow-sm cursor-pointer transition-all bg-white group">
-                        <div class="flex items-center gap-3 overflow-hidden">
-                            <div class="w-10 h-10 rounded-full ${cat.bg} ${cat.text} flex items-center justify-center flex-shrink-0">
-                                <i class="ph-fill ${cat.icon} text-lg"></i>
+                    <div onclick="openEventDetails('${evt.id}', ${evt.nextDate.getFullYear()})" class="flex items-center justify-between p-3.5 rounded-xl border border-slate-100 hover:border-slate-300 hover:shadow-md cursor-pointer transition-all bg-white group">
+                        <div class="flex items-center gap-3.5 overflow-hidden">
+                            <div class="w-11 h-11 rounded-full ${cat.bg} ${cat.text} flex items-center justify-center flex-shrink-0 shadow-inner">
+                                <i class="ph-fill ${cat.icon} text-xl"></i>
                             </div>
                             <div class="truncate">
-                                <h4 class="text-sm font-bold text-slate-900 group-hover:text-brand-600 transition-colors truncate">${evt.title}</h4>
-                                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wide mt-0.5">${cat.label}</p>
+                                <h4 class="text-sm font-extrabold text-slate-900 group-hover:text-brand-600 transition-colors truncate">${evt.title}</h4>
+                                <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wide mt-0.5">${cat.label}</p>
                             </div>
                         </div>
                         <div class="text-right flex-shrink-0 pl-2">
-                            <span class="text-[11px] font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded-md">${timeStr}</span>
+                            <span class="text-[11px] font-extrabold text-slate-700 bg-slate-100 border border-slate-200 px-2.5 py-1.5 rounded-lg shadow-sm">${timeStr}</span>
                         </div>
                     </div>
                 `;
             });
         }
 
+        // --- CRUD OPERATIONS ---
         function openEventDetails(evtId, currentViewYear) {
             const evt = events.find(e => e.id === evtId);
             if (!evt) return;
@@ -785,14 +901,14 @@
 
             const cat = categoryMap[evt.category] || categoryMap['event'];
             
-            document.getElementById('detailBanner').className = `h-16 flex justify-end p-3 relative ${cat.bg}`;
-            document.getElementById('detailIconWrapper').className = `absolute -top-10 left-6 w-16 h-16 rounded-2xl border-4 border-white shadow-sm flex items-center justify-center text-3xl ${cat.bg} ${cat.text}`;
+            document.getElementById('detailBanner').className = `h-20 flex justify-end p-4 relative ${cat.bg}`;
+            document.getElementById('detailIconWrapper').className = `absolute -top-10 left-6 w-16 h-16 rounded-2xl border-4 border-white shadow-lg flex items-center justify-center text-3xl ${cat.bg} ${cat.text}`;
             document.getElementById('detailIcon').className = `ph-fill ${cat.icon}`;
             
             document.getElementById('viewTitle').textContent = evt.title;
             const badge = document.getElementById('viewCatBadge');
             badge.textContent = cat.label;
-            badge.className = `px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-white border ${cat.border} ${cat.text}`;
+            badge.className = `px-3 py-1 rounded-full text-[10px] font-extrabold tracking-wider uppercase bg-white border shadow-sm ${cat.border} ${cat.text}`;
             
             let displayDate = formatDisplayDate(evt.date);
             let ageInfo = "";
@@ -800,7 +916,7 @@
                 const birthYear = new Date(evt.date).getFullYear();
                 const age = currentViewYear - birthYear;
                 displayDate = formatDisplayDate(`${currentViewYear}-${evt.date.substr(5)}`);
-                if (age > 0) ageInfo = `<br><span class="text-orange-500 font-bold mt-1 inline-block">Turning ${age} years old! 🎂</span>`;
+                if (age > 0) ageInfo = `<br><span class="text-orange-600 font-extrabold mt-1 inline-block bg-orange-50 px-2 py-0.5 rounded-md border border-orange-100">Turning ${age} years old! 🎂</span>`;
             }
             
             document.getElementById('viewDate').innerHTML = `<i class="ph-bold ph-calendar-blank"></i> ${displayDate} ${ageInfo}`;
@@ -817,7 +933,6 @@
             tipsContainer.innerHTML = '';
             cat.tips.forEach(tip => tipsContainer.innerHTML += `<li>${tip}</li>`);
 
-            // Security: Actions only for Admin
             const actions = document.getElementById('detailActions');
             if (isAdmin) actions.classList.remove('hidden');
             else actions.classList.add('hidden');
@@ -829,11 +944,12 @@
             document.getElementById('eventModal').classList.remove('active');
             document.getElementById('detailModal').classList.remove('active');
             document.getElementById('confirmModal').classList.remove('active');
+            document.getElementById('adminLoginModal').classList.remove('active');
         }
 
         function openAddModal() {
             if(!isAdmin) return;
-            document.getElementById('modalTitle').textContent = 'Create New Event';
+            document.getElementById('modalTitle').innerHTML = '<i class="ph-bold ph-calendar-plus text-brand-500"></i> Create Event';
             document.getElementById('eventForm').reset();
             document.getElementById('eventId').value = '';
             document.getElementById('eventModal').classList.add('active');
@@ -846,7 +962,7 @@
             
             closeModals();
             
-            document.getElementById('modalTitle').textContent = 'Edit Event';
+            document.getElementById('modalTitle').innerHTML = '<i class="ph-bold ph-pencil-simple text-brand-500"></i> Edit Event';
             document.getElementById('eventId').value = evt.id;
             document.getElementById('eventTitle').value = evt.title;
             document.getElementById('eventDate').value = evt.date;
@@ -886,7 +1002,7 @@
             };
 
             try {
-                const url = isEdit ? `${API_URL}/id/${id}` : API_URL;
+                const url = isEdit ? `${API_BASE_URL}/id/${id}` : API_BASE_URL;
                 const method = isEdit ? 'PUT' : 'POST';
                 const bodyObj = isEdit ? payload : { data: [payload] };
 
@@ -898,8 +1014,10 @@
                 
                 if(!response.ok) throw new Error("Failed");
                 
+                logAction(isEdit ? "EDIT_EVENT" : "ADD_EVENT", `Title: ${title}, Date: ${date}, Cat: ${payload.category}`);
+                
                 closeModals();
-                showToast("Event saved!");
+                showToast(isEdit ? "Event updated!" : "Event created!");
                 fetchEvents();
             } catch(e) {
                 showToast("Failed to save data.", "error");
@@ -915,8 +1033,15 @@
             actionToConfirm = executeDeleteEvent;
             
             document.getElementById('detailModal').classList.remove('active');
-            document.getElementById('confirmTitle').textContent = "Delete Data?";
-            document.getElementById('confirmDesc').textContent = "This person/event will be permanently removed.";
+            
+            const evt = events.find(e => e.id === currentViewingEventId);
+            const isBirthday = evt && evt.category === 'birthday';
+            
+            document.getElementById('confirmTitle').textContent = isBirthday ? "Hapus Data Karyawan?" : "Delete Event?";
+            document.getElementById('confirmDesc').textContent = isBirthday 
+                ? "Gunakan ini jika karyawan resign. Data ultah akan dihapus permanen." 
+                : "This action cannot be undone.";
+                
             document.getElementById('confirmModal').classList.add('active');
         }
         
@@ -932,11 +1057,15 @@
         async function executeDeleteEvent() {
             closeConfirmModal();
             setSyncStatus('syncing');
+            const evt = events.find(e => e.id === currentViewingEventId);
+            
             try {
-                const response = await fetch(`${API_URL}/id/${currentViewingEventId}`, { method: 'DELETE' });
+                const response = await fetch(`${API_BASE_URL}/id/${currentViewingEventId}`, { method: 'DELETE' });
                 if (!response.ok) throw new Error("API Error");
                 
-                showToast("Deleted successfully!");
+                logAction("DELETE_EVENT", `Deleted: ${evt ? evt.title : currentViewingEventId}`);
+                
+                showToast("Data dihapus!");
                 fetchEvents();
             } catch(e) {
                 showToast("Failed to delete.", "error");
@@ -944,6 +1073,7 @@
             }
         }
 
+        // --- IMPORT HOLIDAYS ---
         function importPublicHolidays() {
             if(!isAdmin) return;
             
@@ -953,7 +1083,6 @@
                 closeConfirmModal();
                 setSyncStatus('syncing');
                 try {
-                    // Mengambil data libur nasional Indonesia otomatis dari Internet (Nager.Date API)
                     const res = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${currentYear}/ID`);
                     if (!res.ok) throw new Error("Gagal mengambil data dari server kalender dunia.");
                     const holidays = await res.json();
@@ -961,20 +1090,21 @@
                     const payloadData = holidays.map(h => ({
                         id: `hol_${Math.random().toString(36).substr(2,9)}`,
                         date: h.date, 
-                        title: h.localName, // Nama libur dalam bahasa Indonesia
+                        title: h.localName, 
                         category: 'holiday',
-                        description: h.name, // Nama libur dalam bahasa Inggris
+                        description: h.name, 
                         notify_1: '0', 
                         notify_2: '0'
                     }));
 
-                    const response = await fetch(API_URL, {
+                    const response = await fetch(API_BASE_URL, {
                         method: 'POST',
                         headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
                         body: JSON.stringify({ data: payloadData })
                     });
                     
                     if(response.ok) {
+                        logAction("IMPORT_HOLIDAY", `Imported holidays for year ${currentYear}`);
                         showToast(`Holidays for ${currentYear} imported!`);
                         fetchEvents();
                     } else throw new Error("API SheetDB Error");
@@ -986,7 +1116,7 @@
             };
 
             document.getElementById('confirmTitle').textContent = `Import Holidays ${currentYear}?`;
-            document.getElementById('confirmDesc').textContent = `This will auto-fetch Indonesian national holidays for ${currentYear} and add them to your calendar.`;
+            document.getElementById('confirmDesc').textContent = `Sistem akan menarik data tanggal merah nasional Indonesia tahun ${currentYear} ke dalam database Anda.`;
             document.getElementById('confirmModal').classList.add('active');
         }
     </script>
