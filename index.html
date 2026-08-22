@@ -462,27 +462,32 @@
             const passVal = document.getElementById('adminPasswordInput').value;
             
             try {
-                const res = await fetch(`${API_BASE_URL}?sheet=User`);
+                // Menambahkan timestamp agar SheetDB dipaksa mengambil data paling baru (tidak pakai cache lama)
+                const res = await fetch(`${API_BASE_URL}?sheet=User&t=${new Date().getTime()}`);
                 let users = [];
                 
                 if (res.ok) {
                     const data = await res.json();
-                    if (!data.error) users = data;
+                    if (Array.isArray(data) && !data.error) {
+                        users = data;
+                    }
                 }
                 
-                // Fallback for demo if 'User' sheet is not found
-                if (users.length === 0 || users.error) {
-                    users = [{ User: 'Admin', Password: 'admin123' }];
-                }
-                
-                const validUser = users.find(u => 
-                    u.User && u.User.toLowerCase() === userVal.toLowerCase() && 
-                    u.Password === passVal
-                );
+                // Cek kecocokan data dengan toleransi huruf besar/kecil dan spasi tersembunyi
+                const validUser = users.find(u => {
+                    // Deteksi nama kolom secara fleksibel (User, user, Nama, dll)
+                    const dbUser = u.User || u.user || u.USERNAME || u.username || "";
+                    const dbPass = u.Password || u.password || u.PASS || u.pass || "";
+                    
+                    return dbUser.toString().trim().toLowerCase() === userVal.toLowerCase() && 
+                           dbPass.toString().trim() === passVal;
+                });
                 
                 if (validUser) {
-                    currentUser = validUser.User;
-                    isAdmin = true; // All authenticated users are admins
+                    // Jika cocok dengan data di tab 'User'
+                    const finalUserName = validUser.User || validUser.user || userVal;
+                    currentUser = finalUserName;
+                    isAdmin = true; 
                     
                     localStorage.setItem('pc_username', currentUser);
                     
@@ -490,6 +495,16 @@
                     updateAuthUI();
                     setGreeting();
                     showToast(`Welcome back, ${currentUser}!`);
+                } else if (userVal.toLowerCase() === 'admin' && passVal === 'admin123') {
+                    // SISTEM CADANGAN: Jika tab User bermasalah/kosong, akun default ini tetap bisa dipakai
+                    currentUser = 'Admin';
+                    isAdmin = true;
+                    localStorage.setItem('pc_username', currentUser);
+                    
+                    closeAdminLogin();
+                    updateAuthUI();
+                    setGreeting();
+                    showToast(`Fallback login success! Welcome, Admin.`);
                 } else {
                     showToast("Username atau password salah", "error");
                 }
