@@ -227,7 +227,7 @@
         </main>
     </div>
 
-    <!-- MODAL: ADMIN LOGIN (Updated with Username) -->
+    <!-- MODAL: ADMIN LOGIN -->
     <div id="adminLoginModal" class="modal-overlay fixed inset-0 z-[70] flex items-center justify-center p-4">
         <div class="modal-content bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full border border-slate-100 relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-brand-500 to-orange-400"></div>
@@ -377,7 +377,7 @@
             <p class="text-sm text-slate-500 mb-8 font-medium" id="confirmDesc">This action cannot be undone.</p>
             <div class="flex gap-3">
                 <button onclick="closeConfirmModal()" class="flex-1 py-3 bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-100 transition-colors">Cancel</button>
-                <button id="confirmBtn" class="flex-1 py-3 bg-red-600 text-white rounded-xl text-sm font-bold shadow-md shadow-red-500/30 hover:bg-red-700 transition-colors">Yes, Delete</button>
+                <button id="confirmBtn" class="flex-1 py-3 bg-red-600 text-white rounded-xl text-sm font-bold shadow-md shadow-red-500/30 hover:bg-red-700 transition-colors">Yes, Execute</button>
             </div>
         </div>
     </div>
@@ -389,8 +389,8 @@
     </div>
 
     <script>
-        // --- KONFIGURASI DATABASE ---
-        const API_BASE_URL = 'https://sheetdb.io/api/v1/tbbz47b2kd1t8'; 
+        // --- KONEKSI DATABASE BARU ANDA ---
+        const API_BASE_URL = 'https://sheetdb.io/api/v1/cyziqs13034aa'; 
         
         let events = [];
         let currentDate = new Date(2026, 7, 1); 
@@ -462,33 +462,49 @@
             const passVal = document.getElementById('adminPasswordInput').value;
             
             try {
-                // Menambahkan timestamp agar SheetDB dipaksa mengambil data paling baru (tidak pakai cache lama)
+                // Menambahkan timestamp agar SheetDB dipaksa mengambil data paling baru (Bypass Cache)
                 const res = await fetch(`${API_BASE_URL}?sheet=User&t=${new Date().getTime()}`);
                 let users = [];
                 
                 if (res.ok) {
                     const data = await res.json();
-                    if (Array.isArray(data) && !data.error) {
+                    if (data.error) {
+                        console.warn("SheetDB Info (Tab User):", data.error);
+                    } else if (Array.isArray(data)) {
                         users = data;
                     }
                 }
                 
-                // Cek kecocokan data dengan toleransi huruf besar/kecil dan spasi tersembunyi
+                // PENCARIAN SUPER FLEKSIBEL (Anti spasi & huruf besar/kecil di Google Sheet)
                 const validUser = users.find(u => {
-                    // Deteksi nama kolom secara fleksibel (User, user, Nama, dll)
-                    const dbUser = u.User || u.user || u.USERNAME || u.username || "";
-                    const dbPass = u.Password || u.password || u.PASS || u.pass || "";
+                    let dbUser = "";
+                    let dbPass = "";
+                    
+                    for (let key in u) {
+                        let cleanKey = key.trim().toLowerCase();
+                        if (cleanKey === 'user' || cleanKey === 'username' || cleanKey === 'nama') {
+                            dbUser = u[key];
+                        }
+                        if (cleanKey === 'password' || cleanKey === 'pass') {
+                            dbPass = u[key];
+                        }
+                    }
                     
                     return dbUser.toString().trim().toLowerCase() === userVal.toLowerCase() && 
                            dbPass.toString().trim() === passVal;
                 });
                 
                 if (validUser) {
-                    // Jika cocok dengan data di tab 'User'
-                    const finalUserName = validUser.User || validUser.user || userVal;
+                    let finalUserName = userVal;
+                    for (let key in validUser) {
+                        let cleanKey = key.trim().toLowerCase();
+                        if (cleanKey === 'user' || cleanKey === 'username' || cleanKey === 'nama') {
+                            finalUserName = validUser[key] || userVal;
+                        }
+                    }
+                    
                     currentUser = finalUserName;
                     isAdmin = true; 
-                    
                     localStorage.setItem('pc_username', currentUser);
                     
                     closeAdminLogin();
@@ -496,7 +512,7 @@
                     setGreeting();
                     showToast(`Welcome back, ${currentUser}!`);
                 } else if (userVal.toLowerCase() === 'admin' && passVal === 'admin123') {
-                    // SISTEM CADANGAN: Jika tab User bermasalah/kosong, akun default ini tetap bisa dipakai
+                    // SISTEM CADANGAN JIKA GOOGLE SHEET BELUM SIAP
                     currentUser = 'Admin';
                     isAdmin = true;
                     localStorage.setItem('pc_username', currentUser);
@@ -510,7 +526,7 @@
                 }
             } catch (err) {
                 console.error(err);
-                showToast("Terjadi kesalahan koneksi.", "error");
+                showToast("Terjadi kesalahan koneksi jaringan.", "error");
             } finally {
                 btn.innerHTML = 'Login';
                 btn.disabled = false;
@@ -1098,6 +1114,7 @@
                 closeConfirmModal();
                 setSyncStatus('syncing');
                 try {
+                    // Logic baru: Menarik data libur otomatis dari API kalender dunia sesuai tahun yang sedang dilihat
                     const res = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${currentYear}/ID`);
                     if (!res.ok) throw new Error("Gagal mengambil data dari server kalender dunia.");
                     const holidays = await res.json();
