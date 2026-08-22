@@ -544,25 +544,29 @@
         }
         
         async function logAction(actionType, detailString) {
-            if(!currentUser) return;
+            if (!currentUser) return;
+            
+            // Siapkan data untuk dikirim ke Tab 'Log'
             const payload = {
-                Timestamp: new Date().toISOString(),
+                Timestamp: new Date().toLocaleString(),
                 User: currentUser,
                 Action: actionType,
                 Details: detailString
             };
+
             try {
-                await fetch(`${API_BASE_URL}?sheet=Log`, {
+                // Tembak log secara diam-diam (silent) ke SheetDB di latar belakang
+                fetch(`${API_BASE_URL}?sheet=Log`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
                     body: JSON.stringify({ data: [payload] })
-                });
+                }).catch(err => console.warn("Log Warning:", err));
             } catch(e) {
-                console.error("Gagal mencatat log:", e);
+                console.warn(e);
             }
         }
 
-        // --- SISTEM NOTIFIKASI MANUAL ---
+        // --- SISTEM NOTIFIKASI MANUAL DI LATAR BELAKANG ---
         async function sendManualNotification() {
             if(!isAdmin) return;
             
@@ -571,36 +575,54 @@
 
             const btn = event.currentTarget;
             const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="ph-bold ph-spinner animate-spin"></i> Menyiapkan...';
+            
+            // Ubah tombol jadi loading
+            btn.innerHTML = '<i class="ph-bold ph-spinner animate-spin"></i> Mengirim di latar belakang...';
             btn.disabled = true;
 
+            const dateDisplay = evt.category === 'birthday' 
+                ? formatDisplayDate(`${currentDate.getFullYear()}-${evt.date.substr(5)}`)
+                : formatDisplayDate(evt.date);
+            
+            // Siapkan paket data untuk dikirim ke Google Sheet
+            const payload = {
+                title: evt.title,
+                date: dateDisplay,
+                category: evt.category.toUpperCase(),
+                description: evt.description || '-'
+            };
+
+            // URL WEB APP APPS SCRIPT ANDA YANG BARU
+            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxHFr_gXVb9q0kGX0Q7ap6RcYOKiK_WONtIrw8d_hUAmGe9Bocat1YhwcagmfgToEFq/exec';
+
+            if(SCRIPT_URL.includes('GANTI_DENGAN_KODE')) {
+                showToast("Anda belum memasukkan Web App URL di file index.html!", "error");
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                return;
+            }
+
             try {
-                const res = await fetch(`${API_BASE_URL}?sheet=Email`);
-                const emailsData = await res.json();
+                // Tembak data ke Google Apps Script tanpa membuka aplikasi email!
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // Pakai text/plain agar tidak error CORS
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
                 
-                const bccList = emailsData.map(e => e.email).filter(e => e && e.trim() !== "").join(',');
-                
-                if(!bccList) {
-                    showToast("Tidak ada email di Tab 'Email'", "error");
-                    return;
+                if(result.status === 'success') {
+                    logAction("MANUAL_EMAIL", `Silent Background Email sent for: ${evt.title}`);
+                    showToast("Email berhasil dikirim ke seluruh tim!");
+                } else {
+                    showToast("Gagal mengirim: " + result.message, "error");
                 }
-
-                const dateDisplay = evt.category === 'birthday' 
-                    ? formatDisplayDate(`${currentDate.getFullYear()}-${evt.date.substr(5)}`)
-                    : formatDisplayDate(evt.date);
-                
-                const subject = encodeURIComponent(`Pengingat Event: ${evt.title}`);
-                const body = encodeURIComponent(`Halo Tim,\n\nMenginformasikan bahwa akan ada agenda berikut:\n\nNama Event: ${evt.title}\nKategori: ${evt.category.toUpperCase()}\nTanggal: ${dateDisplay}\nKeterangan: ${evt.description || '-'}\n\nSalam,\nAdmin PeopleCalendar`);
-
-                window.location.href = `mailto:?bcc=${bccList}&subject=${subject}&body=${body}`;
-                
-                logAction("MANUAL_EMAIL", `Triggered manual email for event: ${evt.title}`);
-                showToast("Aplikasi email dibuka!");
-                
             } catch(err) {
                 console.error(err);
-                showToast("Gagal menarik data email.", "error");
+                showToast("Terjadi kesalahan jaringan saat mengirim email.", "error");
             } finally {
+                // Kembalikan wujud tombol seperti semula
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }
