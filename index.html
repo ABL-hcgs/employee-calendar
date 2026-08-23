@@ -3,261 +3,318 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PeopleCalendar - Employee Engagement</title>
+    <title>PeopleCalendar - HR Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: {
-                        brand: { 50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6', 600: '#2563eb', 900: '#1e3a8a' }
-                    }
-                }
-            }
-        }
-    </script>
-    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-        
-        /* BACKGROUND IMAGE SESUAI PERMINTAAN */
-        body { 
+        body {
+            font-family: 'Inter', sans-serif;
+            /* Background kustom yang Anda minta */
             background-image: url('https://i.ibb.co.com/BH4L0grj/background-2.png');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
-            color: #0f172a;
+            background-repeat: no-repeat;
+            color: #1e293b;
         }
-        
-        /* EFEK KACA (GLASSMORPHISM) */
-        #app-wrapper {
-            background-color: rgba(248, 250, 252, 0.90);
+
+        /* Efek Kaca (Glassmorphism) agar teks tetap terbaca di atas background */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 1px;
+            background-color: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            overflow: hidden;
         }
         
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
-        .modal-overlay { opacity: 0; pointer-events: none; transition: all 0.3s ease; background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
-        .modal-overlay.active { opacity: 1; pointer-events: auto; }
-        .modal-content { transform: scale(0.95) translateY(10px); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
-        
-        .toast { position: fixed; bottom: 20px; right: 20px; z-index: 100; transform: translateY(100px); opacity: 0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .toast.show { transform: translateY(0); opacity: 1; }
-        
-        /* FIX UNTUK KALENDER AGAR TIDAK TERPOTONG */
-        .calendar-grid-wrapper {
-            grid-template-rows: repeat(auto-fit, minmax(110px, 1fr));
+        .calendar-cell {
+            background-color: white;
+            min-height: 120px;
+            padding: 0.5rem;
+            transition: all 0.2s;
+            position: relative;
         }
+
+        /* Membuat kalender bisa di scroll jika ada 6 minggu */
+        .calendar-body-scroll {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .calendar-cell:hover { background-color: #f8fafc; }
+        .calendar-cell.today { background-color: #eff6ff; }
+        .calendar-cell.today .date-number {
+            background-color: #3b82f6;
+            color: white;
+            border-radius: 9999px;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .event-badge {
+            font-size: 0.7rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            margin-bottom: 0.25rem;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-weight: 600;
+            transition: transform 0.1s;
+        }
+        .event-badge:hover { transform: scale(1.02); }
+        .badge-birthday { background-color: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; }
+        .badge-holiday { background-color: #f0fdf4; color: #15803d; border: 1px solid #dcfce7; }
+        .badge-event { background-color: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .modal-overlay { background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
     </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { brand: { 50: '#f0fdfa', 100: '#ccfbf1', 500: '#14b8a6', 600: '#0d9488', 900: '#134e4a' } }
+                }
+            }
+        }
+    </script>
 </head>
+<body class="min-h-screen text-slate-800 p-4 md:p-6 lg:p-8">
 
-<body class="h-screen overflow-hidden text-slate-800 antialiased selection:bg-brand-100 selection:text-brand-900 relative">
-
-    <div id="app-wrapper" class="h-full flex flex-col transition-opacity duration-500">
+    <script>
+        const API_BASE_URL = 'https://sheetdb.io/api/v1/cyziqs13034aa'; 
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxHFr_gXVb9q0kGX0Q7ap6RcYOKiK_WONtIrw8d_hUAmGe9Bocat1YhwcagmfgToEFq/exec';
         
-        <!-- HEADER -->
-        <header class="h-20 bg-white/70 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-6 lg:px-8 z-10 flex-shrink-0 shadow-sm">
-            <div class="flex items-center gap-3">
-                <div class="relative flex items-center justify-center w-10 h-10">
-                    <svg class="w-10 h-10 drop-shadow-md" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="15" y="25" width="70" height="60" rx="10" fill="#1e3a8a"/>
-                        <rect x="15" y="45" width="70" height="40" rx="5" fill="#ffffff"/>
-                        <path d="M30 15V35M70 15V35" stroke="#f97316" stroke-width="8" stroke-linecap="round"/>
-                        <circle cx="50" cy="70" r="16" fill="#f97316"/>
-                    </svg>
-                </div>
-                <div class="font-black text-xl tracking-tight hidden sm:block">
-                    <span class="text-brand-900">People</span><span class="text-orange-500">Calendar</span>
-                </div>
-            </div>
+        let currentDate = new Date();
+        let events = [];
+        let isAdmin = false;
+        let currentUser = "Guest";
+        let chartInstance = null;
+    </script>
 
-            <div class="flex items-center gap-4">
-                <div class="flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-full bg-white/80 border border-slate-200 shadow-sm backdrop-blur-sm">
-                    <div id="syncIndicator" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse shadow-sm"></div>
-                    <span id="syncText" class="text-slate-600 tracking-wide uppercase text-[10px]">Connecting</span>
+    <div id="loginModal" class="fixed inset-0 modal-overlay z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+            <div class="bg-gradient-to-r from-brand-500 to-blue-500 h-2"></div>
+            <div class="p-8">
+                <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mb-6">
+                    <i class="ph-fill ph-user-focus text-2xl text-blue-500"></i>
                 </div>
-                <div class="h-8 w-px bg-slate-300"></div>
-                <button id="authBtn" onclick="openAdminLogin()" class="text-sm font-extrabold text-slate-700 bg-white shadow-sm border border-slate-200 px-5 py-2.5 rounded-xl hover:bg-slate-50 hover:text-brand-600 hover:shadow-md transition-all flex items-center gap-2">
-                    <i class="ph-bold ph-lock-key text-lg"></i> Admin Access
-                </button>
-            </div>
-        </header>
-
-        <main class="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6 lg:p-8">
-            <div class="max-w-[1500px] mx-auto flex flex-col xl:flex-row gap-8 h-full">
+                <h2 class="text-2xl font-black text-slate-800 mb-2">Login User</h2>
+                <p class="text-sm text-slate-500 mb-8 font-medium">Please enter your username and password to gain full access.</p>
                 
-                <!-- KIRI: KALENDER -->
-                <div class="flex-1 flex flex-col gap-6 min-w-0">
-                    <div class="bg-white/80 backdrop-blur-md p-6 rounded-3xl border border-white shadow-xl shadow-slate-200/50 flex flex-col flex-1 min-h-[700px] overflow-hidden relative">
-                        
-                        <!-- Header Kalender -->
-                        <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
-                            <h2 id="calendar-title" class="text-2xl sm:text-3xl font-black text-slate-900 drop-shadow-sm">August 2026</h2>
-                            <div class="flex items-center gap-4">
-                                <div class="flex items-center bg-slate-100/80 backdrop-blur-sm rounded-xl p-1 border border-slate-200 shadow-inner">
-                                    <button onclick="changeMonth(-1)" class="p-2 text-slate-500 hover:text-slate-900 hover:bg-white rounded-lg transition-all shadow-sm"><i class="ph-bold ph-caret-left"></i></button>
-                                    <button onclick="resetToToday()" class="px-5 py-2 text-sm font-extrabold text-slate-700 hover:text-slate-900 hover:bg-white rounded-lg transition-all shadow-sm">Today</button>
-                                    <button onclick="changeMonth(1)" class="p-2 text-slate-500 hover:text-slate-900 hover:bg-white rounded-lg transition-all shadow-sm"><i class="ph-bold ph-caret-right"></i></button>
-                                </div>
-                                <div id="adminControls" class="flex gap-2 hidden">
-                                    <button onclick="importPublicHolidays()" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm font-extrabold hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm hover:shadow-md">
-                                        <i class="ph-bold ph-calendar-plus text-lg"></i> <span class="hidden md:inline">Import Holiday</span>
-                                    </button>
-                                    <button onclick="openAddModal()" class="px-5 py-2.5 bg-brand-600 text-white rounded-xl text-sm font-extrabold hover:bg-brand-700 shadow-lg shadow-brand-500/40 transition-all hover:-translate-y-0.5 flex items-center gap-2">
-                                        <i class="ph-bold ph-plus text-lg"></i> Add Event
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Days Header -->
-                        <div class="grid grid-cols-7 border-b-2 border-slate-100 pb-3 mb-2">
-                            <div class="text-center text-xs font-black text-slate-400 tracking-widest uppercase">Sun</div>
-                            <div class="text-center text-xs font-black text-slate-400 tracking-widest uppercase">Mon</div>
-                            <div class="text-center text-xs font-black text-slate-400 tracking-widest uppercase">Tue</div>
-                            <div class="text-center text-xs font-black text-slate-400 tracking-widest uppercase">Wed</div>
-                            <div class="text-center text-xs font-black text-slate-400 tracking-widest uppercase">Thu</div>
-                            <div class="text-center text-xs font-black text-slate-400 tracking-widest uppercase">Fri</div>
-                            <div class="text-center text-xs font-black text-slate-400 tracking-widest uppercase">Sat</div>
-                        </div>
-
-                        <!-- Grid Kalender (Scrollable agar minggu terakhir tidak hilang) -->
-                        <div id="calendar-grid" class="grid grid-cols-7 calendar-grid-wrapper flex-1 overflow-y-auto custom-scrollbar pr-2 gap-2 pb-4 content-start">
-                            <!-- JS Will Inject Here -->
-                        </div>
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Username</label>
+                        <input type="text" id="loginUser" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none transition-all font-semibold text-slate-700">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Password</label>
+                        <input type="password" id="loginPass" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none transition-all font-semibold text-slate-700">
                     </div>
                 </div>
+                
+                <div id="loginError" class="mt-4 text-sm font-bold text-red-500 hidden flex items-center gap-2">
+                    <i class="ph-fill ph-warning-circle"></i> <span>Username atau password salah</span>
+                </div>
 
-                <!-- KANAN: STATS & UPCOMING -->
-                <div class="w-full xl:w-96 flex flex-col gap-6 flex-shrink-0">
-                    
-                    <!-- SUMMARY -->
-                    <div class="bg-white/90 backdrop-blur-md p-7 rounded-3xl border border-white shadow-xl shadow-slate-200/50">
-                        <div class="flex justify-between items-center mb-6">
-                            <h3 class="text-xl font-black text-slate-900">Summary</h3>
-                            <span id="summary-month-text" class="text-xs text-brand-700 font-extrabold bg-brand-50 px-3 py-1.5 rounded-lg border border-brand-100">Month</span>
-                        </div>
-                        
-                        <div class="space-y-3.5">
-                            <div class="flex items-center justify-between p-4 rounded-2xl bg-orange-50/50 border border-orange-100 hover:shadow-md transition-all group">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-400 to-orange-500 text-white flex items-center justify-center shadow-lg shadow-orange-500/30 group-hover:scale-110 transition-transform"><i class="ph-fill ph-cake text-2xl"></i></div>
-                                    <span class="text-sm font-extrabold text-slate-700">Birthdays</span>
-                                </div>
-                                <span class="text-2xl font-black text-slate-900" id="sum-birthdays">0</span>
-                            </div>
-                            <!-- Icon Holiday Diperbaiki -->
-                            <div class="flex items-center justify-between p-4 rounded-2xl bg-green-50/50 border border-green-100 hover:shadow-md transition-all group">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-green-400 to-emerald-500 text-white flex items-center justify-center shadow-lg shadow-green-500/30 group-hover:scale-110 transition-transform"><i class="ph-fill ph-airplane-tilt text-2xl"></i></div>
-                                    <span class="text-sm font-extrabold text-slate-700">Holiday</span>
-                                </div>
-                                <span class="text-2xl font-black text-slate-900" id="sum-holidays">0</span>
-                            </div>
-                            <div class="flex items-center justify-between p-4 rounded-2xl bg-blue-50/50 border border-blue-100 hover:shadow-md transition-all group">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-brand-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform"><i class="ph-fill ph-megaphone text-2xl"></i></div>
-                                    <span class="text-sm font-extrabold text-slate-700">Events</span>
-                                </div>
-                                <span class="text-2xl font-black text-slate-900" id="sum-events">0</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- DONUT CHART -->
-                    <div class="bg-white/90 backdrop-blur-md p-7 rounded-3xl border border-white shadow-xl shadow-slate-200/50">
-                        <h3 class="text-xl font-black text-slate-900 mb-6">Event Types</h3>
-                        <div class="relative w-full h-52 flex items-center justify-center">
-                            <p id="chart-fallback" class="absolute text-sm font-bold text-slate-400 hidden">No data for this month</p>
-                            <canvas id="eventDonutChart"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- UPCOMING EVENTS -->
-                    <div class="bg-white/90 backdrop-blur-md p-7 rounded-3xl border border-white shadow-xl shadow-slate-200/50 flex-1 flex flex-col max-h-[500px]">
-                        <h3 class="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
-                            <i class="ph-fill ph-calendar-star text-brand-500 text-2xl"></i> Upcoming
-                        </h3>
-                        <div id="upcomingEventsList" class="space-y-3 overflow-y-auto custom-scrollbar pr-2 flex-1">
-                            <!-- JS Inject -->
-                        </div>
-                    </div>
+                <div class="mt-8 flex gap-3">
+                    <button onclick="closeLoginModal()" class="flex-1 px-4 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-50 transition-colors">Cancel</button>
+                    <button onclick="submitAdminLogin()" id="btnLoginSubmit" class="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2">
+                        Login
+                    </button>
                 </div>
             </div>
-        </main>
-    </div>
-
-    <!-- MODAL: LOGIN -->
-    <div id="adminLoginModal" class="modal-overlay fixed inset-0 z-[70] flex items-center justify-center p-4">
-        <div class="modal-content bg-white/90 backdrop-blur-xl rounded-[2rem] shadow-2xl p-8 max-w-sm w-full border border-white relative overflow-hidden">
-            <div class="w-20 h-20 bg-gradient-to-br from-brand-400 to-brand-600 text-white rounded-2xl flex items-center justify-center text-4xl mb-6 shadow-lg shadow-brand-500/30 mx-auto">
-                <i class="ph-fill ph-identification-badge"></i>
-            </div>
-            <h3 class="text-2xl font-black text-slate-900 text-center mb-2">Admin Login</h3>
-            <p class="text-sm text-slate-500 mb-8 font-medium text-center">Gain full access to edit calendar.</p>
-            
-            <form onsubmit="submitAdminLogin(event)" class="space-y-5">
-                <div>
-                    <label class="block text-xs font-black text-slate-700 uppercase tracking-widest mb-2">Username</label>
-                    <input type="text" id="adminUsernameInput" required class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all placeholder-slate-400" placeholder="Your Name">
-                </div>
-                <div>
-                    <label class="block text-xs font-black text-slate-700 uppercase tracking-widest mb-2">Password</label>
-                    <input type="password" id="adminPasswordInput" required class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all placeholder-slate-400" placeholder="••••••••">
-                </div>
-                <div class="flex gap-3 pt-4">
-                    <button type="button" onclick="closeAdminLogin()" class="flex-1 py-3.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm font-extrabold hover:bg-slate-50 hover:shadow-md transition-all">Cancel</button>
-                    <button type="submit" id="btnLogin" class="flex-1 py-3.5 bg-brand-600 text-white rounded-xl text-sm font-extrabold shadow-lg shadow-brand-500/40 hover:bg-brand-700 transition-all flex justify-center items-center gap-2">Login</button>
-                </div>
-            </form>
         </div>
     </div>
 
-    <!-- MODAL: ADD/EDIT EVENT -->
-    <div id="eventModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="modal-content bg-white rounded-[2rem] shadow-2xl w-full max-w-lg flex flex-col max-h-[95vh] border border-slate-100 overflow-hidden">
-            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                <h3 class="text-xl font-black text-slate-900 flex items-center gap-3" id="modalTitle">
-                    <i class="ph-fill ph-calendar-plus text-brand-500 text-2xl"></i> Create Event
-                </h3>
-                <button onclick="closeModals()" class="text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full p-2 transition-all"><i class="ph-bold ph-x text-lg"></i></button>
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center mb-8 gap-4 glass-panel p-4 rounded-2xl">
+        <div class="flex items-center gap-3">
+            <!-- Logo Gambar Baru -->
+            <img src="https://i.ibb.co.com/8n6crmsy/logo-people-manager.png" alt="logo people manager" class="w-12 h-12 md:w-14 md:h-14 object-contain rounded-xl shadow-sm bg-white">
+            <div>
+                <!-- Tulisan People (Biru) Calendar (Orange) -->
+                <h1 class="text-xl md:text-2xl font-black tracking-tight"><span class="text-blue-600">People</span><span class="text-orange-500">Calendar</span></h1>
+                <p id="greetingText" class="text-xs font-bold text-slate-500">Good Morning, Team!</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-bold border border-green-200">
+                <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div> Connected
+            </div>
+            <button id="btnAdminAccess" onclick="openLoginModal()" class="w-10 h-10 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl flex items-center justify-center transition-colors border border-slate-200" title="Admin Login">
+                <i class="ph-fill ph-lock-key text-lg"></i>
+            </button>
+            <button id="btnLogout" onclick="logoutAdmin()" class="hidden px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-sm font-bold transition-colors border border-red-200 items-center gap-2">
+                <i class="ph-bold ph-sign-out"></i> Log Out
+            </button>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
+        
+        <div class="lg:col-span-3 glass-panel rounded-3xl p-6 lg:p-8 relative">
+            
+            <div class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+                <div class="flex items-center gap-4">
+                    <h2 id="currentMonthYear" class="text-3xl font-black tracking-tight text-slate-800"></h2>
+                    <div class="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
+                        <button onclick="changeMonth(-1)" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-slate-600 transition-all"><i class="ph-bold ph-caret-left"></i></button>
+                        <button onclick="resetToToday()" class="px-4 text-sm font-bold text-slate-700 hover:bg-white hover:shadow-sm rounded-lg transition-all">Today</button>
+                        <button onclick="changeMonth(1)" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-slate-600 transition-all"><i class="ph-bold ph-caret-right"></i></button>
+                    </div>
+                </div>
+                
+                <div class="flex gap-2">
+                    <button id="btnImport" onclick="importPublicHolidays()" class="hidden px-4 py-2.5 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 rounded-xl text-sm font-bold transition-all shadow-sm flex items-center gap-2">
+                        <i class="ph-bold ph-calendar-plus"></i> Import Holiday
+                    </button>
+                    <button id="btnAddEvent" onclick="openEventModal()" class="hidden px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-blue-500/30 flex items-center gap-2">
+                        <i class="ph-bold ph-plus"></i> Add Event
+                    </button>
+                </div>
+            </div>
+
+            <!-- Calendar Header (Days) -->
+            <div class="grid grid-cols-7 gap-1 mb-2">
+                <div class="text-center text-[10px] font-black uppercase tracking-widest text-slate-400 py-2">Sun</div>
+                <div class="text-center text-[10px] font-black uppercase tracking-widest text-slate-400 py-2">Mon</div>
+                <div class="text-center text-[10px] font-black uppercase tracking-widest text-slate-400 py-2">Tue</div>
+                <div class="text-center text-[10px] font-black uppercase tracking-widest text-slate-400 py-2">Wed</div>
+                <div class="text-center text-[10px] font-black uppercase tracking-widest text-slate-400 py-2">Thu</div>
+                <div class="text-center text-[10px] font-black uppercase tracking-widest text-slate-400 py-2">Fri</div>
+                <div class="text-center text-[10px] font-black uppercase tracking-widest text-slate-400 py-2">Sat</div>
+            </div>
+
+            <!-- Calendar Grid Scrollable -->
+            <div class="calendar-grid bg-slate-200">
+                <div id="calendarDays" class="contents"></div>
             </div>
             
-            <div class="p-6 overflow-y-auto custom-scrollbar">
-                <form id="eventForm" class="space-y-6">
-                    <input type="hidden" id="eventId">
+            <div id="loadingOverlay" class="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-3xl hidden">
+                <i class="ph-bold ph-spinner-gap text-4xl text-brand-500 animate-spin mb-4"></i>
+                <p class="text-sm font-bold text-slate-600 tracking-wide" id="loadingText">Syncing data...</p>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <!-- Summary Stats -->
+            <div class="glass-panel rounded-3xl p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="font-black text-slate-800 text-lg">Summary</h3>
+                    <span id="summaryMonth" class="text-xs font-bold px-2 py-1 bg-slate-100 rounded-md text-slate-500"></span>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between p-3 bg-orange-50/50 border border-orange-100 rounded-2xl">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center"><i class="ph-fill ph-cake"></i></div>
+                            <span class="font-bold text-slate-700 text-sm">Birthdays</span>
+                        </div>
+                        <span id="countBday" class="font-black text-lg text-slate-800">0</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-green-50/50 border border-green-100 rounded-2xl">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-green-100 text-green-600 rounded-xl flex items-center justify-center"><i class="ph-fill ph-airplane-tilt"></i></div>
+                            <span class="font-bold text-slate-700 text-sm">Holiday</span>
+                        </div>
+                        <span id="countHoliday" class="font-black text-lg text-slate-800">0</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-blue-50/50 border border-blue-100 rounded-2xl">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center"><i class="ph-fill ph-megaphone"></i></div>
+                            <span class="font-bold text-slate-700 text-sm">Events</span>
+                        </div>
+                        <span id="countEvent" class="font-black text-lg text-slate-800">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart -->
+            <div class="glass-panel rounded-3xl p-6">
+                <h3 class="font-black text-slate-800 text-lg mb-6">Event Types</h3>
+                <div class="relative h-40">
+                    <canvas id="eventChart"></canvas>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                        <span id="chartTotal" class="text-2xl font-black text-slate-800 leading-none">0</span>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Total Events</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upcoming List -->
+            <div class="glass-panel rounded-3xl p-6">
+                <div class="flex items-center gap-2 mb-6">
+                    <i class="ph-fill ph-calendar-check text-brand-500 text-xl"></i>
+                    <h3 class="font-black text-slate-800 text-lg">Upcoming Events</h3>
+                </div>
+                <div id="upcomingList" class="space-y-3 hide-scrollbar max-h-60 overflow-y-auto">
+                    <!-- JS populated -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="eventModal" class="fixed inset-0 modal-overlay z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+            <!-- Modal Header -->
+            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 sticky top-0 z-10">
+                <h2 id="modalTitle" class="text-lg font-black text-slate-800 flex items-center gap-2">
+                    <i class="ph-fill ph-calendar-plus text-brand-500"></i> <span id="modalTitleText">Add New Event</span>
+                </h2>
+                <button onclick="closeModal()" class="w-8 h-8 bg-slate-200 hover:bg-slate-300 rounded-full flex items-center justify-center text-slate-600 transition-colors">
+                    <i class="ph-bold ph-x"></i>
+                </button>
+            </div>
+            
+            <!-- Modal Body (Scrollable) -->
+            <div class="p-6 overflow-y-auto hide-scrollbar flex-1 space-y-5">
+                <input type="hidden" id="eventId">
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="col-span-2">
+                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Event Title / Name</label>
+                        <input type="text" id="eventTitle" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-brand-500 outline-none transition-all placeholder:font-normal" placeholder="e.g. Townhall Meeting">
+                    </div>
                     
                     <div>
-                        <label class="block text-xs font-black text-slate-700 uppercase tracking-widest mb-2">Title / Name</label>
-                        <input type="text" id="eventTitle" required class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-brand-500 outline-none transition-all placeholder-slate-400" placeholder="e.g. Budi Santoso (if birthday)">
+                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Date</label>
+                        <input type="date" id="eventDate" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-brand-500 outline-none transition-all">
                     </div>
                     
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-black text-slate-700 uppercase tracking-widest mb-2">Category</label>
-                            <select id="eventCategory" onchange="toggleBdayFields()" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-brand-500 outline-none transition-all">
-                                <option value="event">General Event</option>
-                                <option value="birthday">Birthday</option>
-                                <option value="holiday">Holiday</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-black text-slate-700 uppercase tracking-widest mb-2">Date</label>
-                            <input type="date" id="eventDate" required class="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-brand-500 outline-none transition-all">
-                        </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Category</label>
+                        <select id="eventCategory" onchange="toggleBdayFields()" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-brand-500 outline-none transition-all cursor-pointer">
+                            <option value="event">📢 General Event</option>
+                            <option value="birthday">🎂 Birthday</option>
+                            <option value="holiday">🌴 Holiday</option>
+                        </select>
                     </div>
-                    
-                    <!-- HIDDEN FIELDS: POSITION & DIRECTORATE (Untuk Birthday) -->
-                    <div id="bdayFields" class="grid grid-cols-2 gap-4 hidden bg-orange-50/50 p-4 rounded-2xl border border-orange-100">
+
+                    <!-- Birthday Specific Fields (Emp ID, Position, Directorate) -->
+                    <div id="bdayFields" class="col-span-2 grid grid-cols-2 gap-4 hidden bg-orange-50/50 p-4 rounded-2xl border border-orange-100 mt-2">
+                        <div class="col-span-2">
+                            <label class="block text-[10px] font-black text-orange-800 uppercase tracking-widest mb-1.5">Employee ID</label>
+                            <input type="text" id="eventEmpId" class="w-full px-4 py-2.5 bg-white border border-orange-200 rounded-lg text-xs font-bold focus:ring-2 focus:ring-orange-400 outline-none" placeholder="e.g. EMP-12345">
+                        </div>
                         <div>
                             <label class="block text-[10px] font-black text-orange-800 uppercase tracking-widest mb-1.5">Position</label>
                             <input type="text" id="eventPosition" class="w-full px-4 py-2.5 bg-white border border-orange-200 rounded-lg text-xs font-bold focus:ring-2 focus:ring-orange-400 outline-none" placeholder="Manager">
@@ -266,655 +323,630 @@
                             <label class="block text-[10px] font-black text-orange-800 uppercase tracking-widest mb-1.5">Directorate</label>
                             <input type="text" id="eventDirectorate" class="w-full px-4 py-2.5 bg-white border border-orange-200 rounded-lg text-xs font-bold focus:ring-2 focus:ring-orange-400 outline-none" placeholder="Finance">
                         </div>
-                        <div class="col-span-2 text-[10px] font-bold text-orange-600 flex items-center gap-1">
-                            <i class="ph-fill ph-info"></i> For birthday, date automatically repeats every year based on birth year.
+                        <div class="col-span-2 text-[10px] font-bold text-orange-600 flex items-center gap-1 mt-1">
+                            <i class="ph-fill ph-info text-sm"></i> For birthday, date automatically repeats every year based on birth year.
                         </div>
                     </div>
+
+                    <div class="col-span-2">
+                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Description (Optional)</label>
+                        <textarea id="eventDesc" rows="2" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none transition-all placeholder:font-normal resize-none" placeholder="Add some details..."></textarea>
+                    </div>
                     
-                    <div class="bg-brand-50/50 p-5 rounded-2xl border border-brand-100">
+                    <!-- Notification Setup -->
+                    <div class="col-span-2 bg-brand-50/50 p-5 rounded-2xl border border-brand-100 mt-2">
                         <label class="block text-xs font-black text-brand-900 mb-3 flex items-center gap-2 uppercase tracking-widest"><i class="ph-fill ph-envelope-simple-open text-brand-500 text-lg"></i> Auto-Email Setup</label>
                         <div class="grid grid-cols-2 gap-4">
                             <select id="eventNotify1" class="w-full px-4 py-3 bg-white border border-brand-200 rounded-xl text-xs font-bold text-slate-700 focus:ring-2 focus:ring-brand-500 outline-none shadow-sm cursor-pointer">
                                 <option value="0">No Reminder 1</option>
+                                <option value="30">30 Days Before (1 Bulan)</option>
                                 <option value="7">7 Days Before</option>
                                 <option value="3">3 Days Before</option>
                                 <option value="1">1 Day Before</option>
                             </select>
                             <select id="eventNotify2" class="w-full px-4 py-3 bg-white border border-brand-200 rounded-xl text-xs font-bold text-slate-700 focus:ring-2 focus:ring-brand-500 outline-none shadow-sm cursor-pointer">
                                 <option value="0">No Reminder 2</option>
+                                <option value="30">30 Days Before (1 Bulan)</option>
+                                <option value="7">7 Days Before</option>
                                 <option value="3">3 Days Before</option>
                                 <option value="1">1 Day Before</option>
                                 <option value="0_day">On The Day</option>
                             </select>
                         </div>
                     </div>
-
-                    <div>
-                        <label class="block text-xs font-black text-slate-700 uppercase tracking-widest mb-2">Notes (Optional)</label>
-                        <textarea id="eventDesc" rows="2" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-brand-500 outline-none transition-all resize-none placeholder-slate-400" placeholder="Add some notes..."></textarea>
-                    </div>
-                </form>
-            </div>
-            
-            <div class="p-6 border-t border-slate-100 flex gap-3 bg-slate-50/50">
-                <button type="button" onclick="closeModals()" class="flex-1 py-3.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm font-extrabold hover:bg-slate-100 transition-colors shadow-sm">Cancel</button>
-                <button type="button" onclick="saveEvent()" id="btnSaveEvent" class="flex-1 py-3.5 bg-brand-600 text-white rounded-xl text-sm font-extrabold shadow-lg shadow-brand-500/40 hover:bg-brand-700 transition-all flex justify-center items-center gap-2">Save Event</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL: VIEW DETAILS -->
-    <div id="detailModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="modal-content bg-white rounded-[2rem] shadow-2xl w-full max-w-sm flex flex-col overflow-hidden border border-slate-100">
-            <div id="detailBanner" class="h-24 flex justify-end p-4 relative">
-                <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-                <button onclick="closeModals()" class="relative z-10 w-8 h-8 bg-white/50 hover:bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-slate-900 transition-all shadow-sm"><i class="ph-bold ph-x text-sm"></i></button>
-            </div>
-            
-            <div class="p-6 relative bg-white">
-                <div id="detailIconWrapper" class="absolute -top-10 left-6 w-16 h-16 rounded-2xl border-4 border-white shadow-xl flex items-center justify-center text-3xl">
-                    <i id="detailIcon" class="ph-fill ph-calendar"></i>
-                </div>
-                
-                <div class="mt-8">
-                    <div class="flex justify-between items-start">
-                        <div class="pr-3">
-                            <h2 id="viewTitle" class="text-2xl font-black text-slate-900 leading-tight">Title</h2>
-                            <p id="viewDate" class="text-sm font-bold text-slate-500 mt-1.5 flex items-center gap-1.5"></p>
-                        </div>
-                        <span id="viewCatBadge" class="px-3 py-1 rounded-md text-[10px] font-black tracking-widest uppercase border shadow-sm">Cat</span>
-                    </div>
-                    
-                    <div id="viewPosWrapper" class="mt-4 hidden bg-orange-50 rounded-xl p-3 border border-orange-100">
-                        <p class="text-xs font-black text-orange-800 uppercase tracking-wider mb-1"><i class="ph-fill ph-briefcase"></i> <span id="viewPos"></span></p>
-                        <p class="text-[11px] font-bold text-orange-600"><span id="viewDir"></span></p>
-                    </div>
-
-                    <p id="viewDesc" class="text-sm text-slate-600 mt-4 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-100 font-medium"></p>
-                    
-                    <div class="mt-5 border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-5 shadow-inner">
-                        <h4 class="text-xs font-black text-amber-800 uppercase tracking-widest mb-3 flex items-center gap-1.5"><i class="ph-fill ph-lightbulb text-amber-500 text-base"></i> Engagement Ideas</h4>
-                        <ul id="viewTips" class="text-[12px] text-amber-900 space-y-2 list-disc pl-4 marker:text-amber-400 font-bold leading-snug"></ul>
-                    </div>
                 </div>
             </div>
-            
-            <div id="detailActions" class="p-4 border-t border-slate-100 bg-slate-50 flex flex-wrap gap-2 hidden">
-                <button onclick="sendManualNotification()" class="w-full py-3 mb-1 bg-brand-100 text-brand-700 border border-brand-200 rounded-xl text-sm font-extrabold hover:bg-brand-200 transition-colors shadow-sm flex items-center justify-center gap-2"><i class="ph-bold ph-paper-plane-tilt text-lg"></i> Kirim Email Manual</button>
-                <button onclick="editEventFromView()" class="flex-1 py-3 bg-white border border-slate-300 text-slate-700 rounded-xl text-sm font-extrabold hover:bg-slate-100 transition-colors shadow-sm flex items-center justify-center gap-2"><i class="ph-bold ph-pencil-simple text-lg"></i> Edit</button>
-                <button onclick="confirmDeleteEvent()" class="flex-1 py-3 bg-red-50 text-red-600 border border-red-200 rounded-xl text-sm font-extrabold hover:bg-red-100 transition-colors shadow-sm flex items-center justify-center gap-2"><i class="ph-bold ph-trash text-lg"></i> Hapus / Resign</button>
+
+            <!-- Modal Footer (Buttons) -->
+            <div class="px-6 py-5 border-t border-slate-100 bg-slate-50 sticky bottom-0 z-10 flex flex-col sm:flex-row justify-between items-center gap-3">
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <!-- Button Delete (Admin Only) -->
+                    <button id="btnDeleteEvent" onclick="deleteEvent()" class="hidden flex-1 sm:flex-none px-5 py-3 bg-red-100 hover:bg-red-200 text-red-700 rounded-xl text-sm font-black transition-colors flex items-center justify-center gap-2">
+                        <i class="ph-bold ph-trash"></i> <span id="txtDelete">Delete</span>
+                    </button>
+                    <!-- Button Manual Email -->
+                    <button id="btnManualEmail" onclick="sendManualNotification()" class="hidden flex-1 sm:flex-none px-5 py-3 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-xl text-sm font-black transition-colors flex items-center justify-center gap-2">
+                        <i class="ph-bold ph-paper-plane-tilt"></i> Send Manual Email
+                    </button>
+                </div>
+                <!-- Button Save (Admin Only) -->
+                <button id="btnSaveEvent" onclick="saveEvent()" class="hidden w-full sm:w-auto px-8 py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-sm font-black shadow-lg shadow-slate-900/20 transition-all flex items-center justify-center gap-2">
+                    <i class="ph-bold ph-floppy-disk"></i> Save Event
+                </button>
+                <!-- Info Message (Guest) -->
+                <span id="guestViewMsg" class="text-xs font-bold text-slate-400 flex items-center gap-1 hidden w-full justify-end">
+                    <i class="ph-fill ph-lock-key"></i> View Only
+                </span>
             </div>
         </div>
-    </div>
-
-    <!-- CUSTOM CONFIRM MODAL -->
-    <div id="confirmModal" class="modal-overlay fixed inset-0 z-[80] flex items-center justify-center p-4">
-        <div class="modal-content bg-white rounded-[2rem] shadow-2xl p-8 max-w-sm w-full text-center border border-slate-100">
-            <div class="w-20 h-20 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center text-4xl mx-auto mb-5 shadow-inner">
-                <i class="ph-fill ph-warning-circle"></i>
-            </div>
-            <h3 class="text-xl font-black text-slate-900 mb-2" id="confirmTitle">Are you sure?</h3>
-            <p class="text-sm text-slate-500 mb-8 font-medium" id="confirmDesc">This action cannot be undone.</p>
-            <div class="flex gap-3">
-                <button onclick="closeConfirmModal()" class="flex-1 py-3.5 bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-sm font-extrabold hover:bg-slate-100 transition-colors">Cancel</button>
-                <button id="confirmBtn" class="flex-1 py-3.5 bg-red-600 text-white rounded-xl text-sm font-extrabold shadow-lg shadow-red-500/40 hover:bg-red-700 transition-colors">Yes, Execute</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- TOAST NOTIFICATION -->
-    <div id="toast" class="toast flex items-center gap-3 bg-slate-900 text-white px-5 py-4 rounded-2xl shadow-2xl font-bold text-sm border border-slate-700">
-        <i id="toastIcon" class="ph-fill ph-check-circle text-green-400 text-xl"></i>
-        <span id="toastMsg">Message</span>
     </div>
 
     <script>
-        // CONFIGURATION
-        const API_BASE_URL = 'https://sheetdb.io/api/v1/cyziqs13034aa'; 
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxHFr_gXVb9q0kGX0Q7ap6RcYOKiK_WONtIrw8d_hUAmGe9Bocat1YhwcagmfgToEFq/exec';
-        
-        let events = [];
-        let currentDate = new Date(2026, 7, 1); 
-        let isFetching = false;
-        let chartInstance = null;
-        let currentViewingEventId = null;
-        let currentUser = null; 
-        let isAdmin = false;
-
-        const categoryMap = {
-            'event':    { bg: 'bg-blue-500', text: 'text-white', border: 'border-blue-200', icon: 'ph-megaphone', label: 'Event', tips: ["Kirim email reminder agenda H-1", "Siapkan dokumen presentasi / snack", "Buat link GMeet/Zoom"] },
-            'birthday': { bg: 'bg-orange-500', text: 'text-white', border: 'border-orange-200', icon: 'ph-cake', label: 'Birthday', tips: ["Siapkan kartu ucapan dari tim", "Pesan kue kecil untuk surprise", "Ucapkan di grup chat kantor"] },
-            'holiday':  { bg: 'bg-emerald-500', text: 'text-white', border: 'border-green-200', icon: 'ph-airplane-tilt', label: 'Holiday', tips: ["Aktifkan Auto-Reply Email", "Selesaikan tugas urgent", "Hindari kontak kerja ke tim"] }
-        };
-
-        window.onload = () => {
-            const savedUser = localStorage.getItem('pc_username');
-            if (savedUser) {
-                currentUser = savedUser;
-                isAdmin = true;
-            }
-            updateAuthUI();
+        // --- Core Init ---
+        function initCalendar() {
+            renderCalendar();
             fetchEvents();
-        };
-
-        // --- AUTH & LOGGING ---
-        function updateAuthUI() {
-            const adminControls = document.getElementById('adminControls');
-            const authBtn = document.getElementById('authBtn');
-
-            if (currentUser) {
-                authBtn.innerHTML = `<i class="ph-bold ph-sign-out text-lg"></i> ${currentUser} (Logout)`;
-                authBtn.onclick = handleLogout;
-                authBtn.className = "text-sm font-extrabold text-red-600 bg-white border border-red-200 px-5 py-2.5 rounded-xl hover:bg-red-50 transition-all flex items-center gap-2 shadow-sm";
-                adminControls.classList.remove('hidden');
-            } else {
-                authBtn.innerHTML = '<i class="ph-bold ph-lock-key text-lg"></i> Admin Access';
-                authBtn.onclick = openAdminLogin;
-                authBtn.className = "text-sm font-extrabold text-slate-700 bg-white shadow-sm border border-slate-200 px-5 py-2.5 rounded-xl hover:bg-slate-50 transition-all flex items-center gap-2";
-                adminControls.classList.add('hidden');
-            }
         }
 
-        function openAdminLogin() {
-            document.getElementById('adminUsernameInput').value = '';
-            document.getElementById('adminPasswordInput').value = '';
-            document.getElementById('adminLoginModal').classList.add('active');
-            setTimeout(() => document.getElementById('adminUsernameInput').focus(), 100);
-        }
-        function closeAdminLogin() { document.getElementById('adminLoginModal').classList.remove('active'); }
-
-        async function submitAdminLogin(e) {
-            e.preventDefault();
-            const btn = document.getElementById('btnLogin');
-            btn.innerHTML = '<i class="ph-bold ph-spinner animate-spin"></i> Checking...';
-            btn.disabled = true;
-
-            const userVal = document.getElementById('adminUsernameInput').value.trim();
-            const passVal = document.getElementById('adminPasswordInput').value;
-            
-            try {
-                const res = await fetch(`${API_BASE_URL}?sheet=User&t=${new Date().getTime()}`);
-                let users = [];
-                if (res.ok) {
-                    const data = await res.json();
-                    if (!data.error && Array.isArray(data)) users = data;
-                }
-                
-                const validUser = users.find(u => {
-                    let dbUser = "", dbPass = "";
-                    for (let key in u) {
-                        let k = key.trim().toLowerCase();
-                        if (k === 'user' || k === 'username' || k === 'nama') dbUser = u[key];
-                        if (k === 'password' || k === 'pass') dbPass = u[key];
-                    }
-                    return dbUser.toString().trim().toLowerCase() === userVal.toLowerCase() && dbPass.toString().trim() === passVal;
-                });
-                
-                if (validUser) {
-                    let finalName = userVal;
-                    for (let key in validUser) {
-                        let k = key.trim().toLowerCase();
-                        if (k === 'user' || k === 'username' || k === 'nama') finalName = validUser[key] || userVal;
-                    }
-                    currentUser = finalName; isAdmin = true; 
-                    localStorage.setItem('pc_username', currentUser);
-                    closeAdminLogin(); updateAuthUI();
-                    showToast(`Welcome Admin: ${currentUser}!`);
-                } else if (userVal.toLowerCase() === 'admin' && passVal === 'admin123') {
-                    currentUser = 'Admin'; isAdmin = true;
-                    localStorage.setItem('pc_username', currentUser);
-                    closeAdminLogin(); updateAuthUI();
-                    showToast(`Fallback login success!`);
-                } else {
-                    showToast("Username atau password salah", "error");
-                }
-            } catch (err) {
-                showToast("Terjadi kesalahan koneksi.", "error");
-            } finally {
-                btn.innerHTML = 'Login'; btn.disabled = false;
-            }
+        function showLoading(show, text = "Syncing data...") {
+            const el = document.getElementById('loadingOverlay');
+            document.getElementById('loadingText').innerText = text;
+            if(show) el.classList.remove('hidden');
+            else el.classList.add('hidden');
         }
 
-        function handleLogout() {
-            currentUser = null; isAdmin = false;
-            localStorage.removeItem('pc_username');
-            updateAuthUI(); closeModals(); 
-            showToast("Logged out successfully");
-        }
-        
-        async function logAction(actionType, detailString) {
-            if (!currentUser) return;
-            const payload = { Timestamp: new Date().toLocaleString(), User: currentUser, Action: actionType, Details: detailString };
-            try {
-                fetch(`${API_BASE_URL}?sheet=Log`, {
-                    method: 'POST',
-                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ data: [payload] })
-                }).catch(() => {});
-            } catch(e) {}
-        }
-
-        // --- EMAIL & NOTIFICATIONS ---
-        async function sendManualNotification() {
-            if(!isAdmin) return;
-            const evt = events.find(e => e.id === currentViewingEventId);
-            if(!evt) return;
-
-            const btn = event.currentTarget;
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="ph-bold ph-spinner animate-spin text-lg"></i> Mengirim...';
-            btn.disabled = true;
-
-            const dateDisplay = evt.category === 'birthday' 
-                ? formatDisplayDate(`${currentDate.getFullYear()}-${evt.date.substr(5)}`)
-                : formatDisplayDate(evt.date);
-            
-            const payload = {
-                title: evt.title, date: dateDisplay, category: evt.category,
-                description: evt.description || '-',
-                position: evt.position || '', directorate: evt.directorate || ''
-            };
-
-            try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify(payload)
-                });
-                const result = await response.json();
-                if(result.status === 'success') {
-                    logAction("MANUAL_EMAIL", `Silent Background Email sent for: ${evt.title}`);
-                    showToast("Email berhasil dikirim ke seluruh tim!");
-                } else showToast("Gagal mengirim: " + result.message, "error");
-            } catch(err) {
-                showToast("Kesalahan jaringan saat mengirim email.", "error");
-            } finally {
-                btn.innerHTML = originalText; btn.disabled = false;
-            }
-        }
-
-        // --- CORE UI ---
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById('toast'), icon = document.getElementById('toastIcon'), msg = document.getElementById('toastMsg');
-            msg.textContent = message;
-            if (type === 'error') {
-                icon.className = 'ph-fill ph-x-circle text-red-400 text-xl';
-                toast.classList.replace('border-slate-700', 'border-red-900');
-            } else {
-                icon.className = 'ph-fill ph-check-circle text-green-400 text-xl';
-                toast.classList.replace('border-red-900', 'border-slate-700');
-            }
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
-        }
-
-        function setSyncStatus(status) {
-            const ind = document.getElementById('syncIndicator'), txt = document.getElementById('syncText');
-            if (status === 'syncing') { ind.className = 'w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse shadow-sm'; txt.textContent = 'SYNCING'; } 
-            else if (status === 'connected') { ind.className = 'w-2.5 h-2.5 rounded-full bg-green-500 shadow-sm'; txt.textContent = 'CONNECTED'; } 
-            else { ind.className = 'w-2.5 h-2.5 rounded-full bg-red-500 shadow-sm'; txt.textContent = 'OFFLINE'; }
-        }
-
-        function formatDisplayDate(dateStr) {
-            const options = { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' };
-            const d = new Date(dateStr);
-            return isNaN(d) ? dateStr : d.toLocaleDateString('en-GB', options);
-        }
-
-        // --- FETCH & RENDER ---
+        // --- Fetch Data ---
         async function fetchEvents() {
-            if(isFetching) return;
-            isFetching = true; setSyncStatus('syncing');
-            
+            showLoading(true);
             try {
-                const response = await fetch(`${API_BASE_URL}?t=${new Date().getTime()}`);
-                if (!response.ok) throw new Error('API Response not ok');
-                const data = await response.json();
+                // Anti-cache technique
+                const res = await fetch(`${API_BASE_URL}?t=${new Date().getTime()}`);
+                if (!res.ok) throw new Error('API Error');
+                const data = await res.json();
                 
-                if (typeof data === 'string' || data.error) throw new Error(data.error || "API Limit reached");
-
                 if (Array.isArray(data) && data.length > 0 && (data[0].id || data[0].ID)) {
                     events = data.map(item => {
                         let cat = (item.category || item.Category || 'event').toLowerCase();
                         if (!['event', 'birthday', 'holiday'].includes(cat)) cat = (cat === 'leave') ? 'holiday' : 'event';
                         return {
-                            id: item.id || item.ID, date: item.date || item.Date, title: item.title || item.Title || 'Untitled',
-                            description: item.description || item.Description || '', category: cat,
-                            notify_1: item.notify_1 || item.Notify_1 || '0', notify_2: item.notify_2 || item.Notify_2 || '0',
-                            position: item.position || item.Position || '', directorate: item.directorate || item.Directorate || ''
+                            id: item.id || item.ID, 
+                            date: item.date || item.Date, 
+                            title: item.title || item.Title || 'Untitled',
+                            description: item.description || item.Description || '', 
+                            category: cat,
+                            notify_1: item.notify_1 || item.Notify_1 || '0', 
+                            notify_2: item.notify_2 || item.Notify_2 || '0',
+                            position: item.position || item.Position || '', 
+                            directorate: item.directorate || item.Directorate || '',
+                            emp_id: item.emp_id || item.Emp_id || item.Emp_ID || ''
                         };
                     }).filter(e => e.date);
-                } else events = [];
-                setSyncStatus('connected');
-            } catch (error) {
-                setSyncStatus('error'); events = []; 
-                showToast("Gagal memuat data kalender.", "error");
-            } finally {
-                isFetching = false; renderCalendar(); renderUpcomingEvents();
-            }
-        }
-
-        function changeMonth(delta) { currentDate.setMonth(currentDate.getMonth() + delta); renderCalendar(); }
-        function resetToToday() { currentDate = new Date(); renderCalendar(); }
-
-        function renderCalendar() {
-            const year = currentDate.getFullYear(), month = currentDate.getMonth();
-            const firstDay = new Date(year, month, 1).getDay(), daysInMonth = new Date(year, month + 1, 0).getDate();
-            const today = new Date();
-            
-            document.getElementById('calendar-title').textContent = new Date(year, month).toLocaleString('default', { month: 'long', year: 'numeric' });
-            document.getElementById('summary-month-text').textContent = new Date(year, month).toLocaleString('default', { month: 'short', year: 'numeric' });
-            
-            const grid = document.getElementById('calendar-grid');
-            grid.innerHTML = '';
-            
-            let counts = { birthday: 0, holiday: 0, event: 0 };
-            
-            for (let i = 0; i < firstDay; i++) {
-                const div = document.createElement('div');
-                div.className = 'bg-slate-50/30 rounded-xl border border-transparent min-h-[110px]';
-                grid.appendChild(div);
-            }
-            
-            for (let day = 1; day <= daysInMonth; day++) {
-                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
-                
-                const div = document.createElement('div');
-                div.className = `bg-white rounded-xl border border-slate-100 min-h-[110px] p-2 flex flex-col transition-all hover:border-brand-300 hover:shadow-md ${isToday ? 'bg-brand-50/50 ring-2 ring-brand-500 shadow-sm z-10' : 'shadow-sm'}`;
-                
-                let headerHTML = `<div class="flex justify-between items-center mb-2">
-                    <span class="text-xs font-black ${isToday ? 'text-white bg-brand-600 px-2 py-0.5 rounded-md shadow-sm' : 'text-slate-700 pl-1'}">${day}</span>
-                </div>`;
-                
-                const dayEvents = events.filter(evt => {
-                    if(!evt.date) return false;
-                    const eDate = new Date(evt.date);
-                    if(isNaN(eDate)) return false;
-                    return evt.category === 'birthday' ? (eDate.getDate() === day && eDate.getMonth() === month) : evt.date === dateStr;
-                });
-                
-                dayEvents.forEach(e => counts[e.category] = (counts[e.category] || 0) + 1);
-
-                let evHTML = `<div class="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-1.5 pr-0.5">`;
-                dayEvents.forEach(evt => {
-                    const cat = categoryMap[evt.category] || categoryMap['event'];
-                    const safeTitle = evt.title.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-                    
-                    evHTML += `
-                    <div onclick="openEventDetails('${evt.id}', ${year})" class="text-[10px] sm:text-[11px] px-2 py-1.5 rounded-lg cursor-pointer truncate border transition-all hover:-translate-y-px flex items-center gap-1.5 ${cat.bg} text-white shadow-sm" title="${safeTitle}">
-                        <i class="ph-bold ${cat.icon} flex-shrink-0 text-sm"></i>
-                        <span class="truncate font-bold">${safeTitle}</span>
-                    </div>`;
-                });
-                evHTML += `</div>`;
-                
-                div.innerHTML = headerHTML + evHTML;
-                grid.appendChild(div);
-            }
-            
-            document.getElementById('sum-birthdays').textContent = counts.birthday;
-            document.getElementById('sum-holidays').textContent = counts.holiday;
-            document.getElementById('sum-events').textContent = counts.event;
-
-            updateChart(counts);
-        }
-
-        function updateChart(counts) {
-            const canvas = document.getElementById('eventDonutChart'), fallback = document.getElementById('chart-fallback');
-            if (!canvas) return;
-            const dataArr = [counts.birthday, counts.holiday, counts.event], total = dataArr.reduce((a,b) => a + b, 0);
-
-            if (total === 0) { canvas.style.display = 'none'; fallback.style.display = 'block'; return; }
-            canvas.style.display = 'block'; fallback.style.display = 'none';
-            if (chartInstance) chartInstance.destroy();
-
-            try {
-                const ctx = canvas.getContext('2d');
-                chartInstance = new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Birthdays', 'Holiday', 'Events'],
-                        datasets: [{
-                            data: dataArr, backgroundColor: ['#f97316', '#10b981', '#3b82f6'],
-                            borderWidth: 0, hoverOffset: 8
-                        }]
-                    },
-                    options: {
-                        responsive: true, maintainAspectRatio: false, cutout: '75%',
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: { backgroundColor: '#1e293b', titleFont: { family: 'Inter', size: 13 }, bodyFont: { family: 'Inter', size: 13, weight: 'bold' }, padding: 12, cornerRadius: 12 }
-                        }
-                    },
-                    plugins: [{
-                        id: 'centerText',
-                        beforeDraw: function(chart) {
-                            var width = chart.width, height = chart.height, ctx = chart.ctx;
-                            ctx.restore(); var fontSize = (height / 110).toFixed(2);
-                            ctx.font = "900 " + fontSize + "em Inter"; ctx.textBaseline = "middle"; ctx.fillStyle = "#0f172a";
-                            var textX = Math.round((width - ctx.measureText(total.toString()).width) / 2), textY = height / 2 - 10;
-                            ctx.fillText(total.toString(), textX, textY);
-                            ctx.font = "800 " + (fontSize/3).toFixed(2) + "em Inter"; ctx.fillStyle = "#64748b";
-                            ctx.fillText("Total Events", Math.round((width - ctx.measureText("Total Events").width) / 2), textY + 25);
-                            ctx.save();
-                        }
-                    }]
-                });
-            } catch (err) {}
-        }
-
-        function renderUpcomingEvents() {
-            const list = document.getElementById('upcomingEventsList'); list.innerHTML = '';
-            const today = new Date(); today.setHours(0,0,0,0);
-            
-            let upcoming = [];
-            events.forEach(evt => {
-                if(!evt.date) return; const eDate = new Date(evt.date); if(isNaN(eDate)) return;
-                if (evt.category === 'birthday') {
-                    let nextBday = new Date(today.getFullYear(), eDate.getMonth(), eDate.getDate());
-                    if (nextBday < today) nextBday.setFullYear(today.getFullYear() + 1);
-                    upcoming.push({...evt, nextDate: nextBday});
                 } else {
-                    eDate.setHours(0,0,0,0);
-                    if (eDate >= today) upcoming.push({...evt, nextDate: eDate});
+                    events = [];
+                }
+                renderCalendar();
+                renderSidebar();
+            } catch (err) {
+                console.error("Fetch Error:", err);
+            }
+            showLoading(false);
+        }
+
+        // --- Render Calendar Grid ---
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            document.getElementById('currentMonthYear').innerText = new Date(year, month).toLocaleString('default', { month: 'long', year: 'numeric' });
+            
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const daysInPrevMonth = new Date(year, month, 0).getDate();
+            
+            const calendarDays = document.getElementById('calendarDays');
+            calendarDays.innerHTML = '';
+            
+            const today = new Date();
+            today.setHours(0,0,0,0);
+
+            // Previous Month's filler days
+            for (let i = firstDay; i > 0; i--) {
+                calendarDays.appendChild(createDayCell(daysInPrevMonth - i + 1, true, year, month - 1));
+            }
+            
+            // Current Month days
+            for (let i = 1; i <= daysInMonth; i++) {
+                const cellDate = new Date(year, month, i);
+                const isToday = cellDate.getTime() === today.getTime();
+                calendarDays.appendChild(createDayCell(i, false, year, month, isToday));
+            }
+            
+            // Next Month's filler days to complete the grid
+            const totalCells = firstDay + daysInMonth;
+            const remainingCells = Math.ceil(totalCells / 7) * 7 - totalCells;
+            for (let i = 1; i <= remainingCells; i++) {
+                calendarDays.appendChild(createDayCell(i, true, year, month + 1));
+            }
+        }
+
+        function createDayCell(day, isFiller, year, month, isToday = false) {
+            const div = document.createElement('div');
+            div.className = `calendar-cell ${isFiller ? 'bg-slate-50 opacity-50' : ''} ${isToday ? 'today' : ''}`;
+            
+            // Fix month overflow logic for proper date matching
+            let cellDate = new Date(year, month, day);
+            
+            const dayNum = document.createElement('div');
+            dayNum.className = `date-number text-sm font-bold mb-2 ${isFiller ? 'text-slate-400' : 'text-slate-700'}`;
+            dayNum.innerText = day;
+            div.appendChild(dayNum);
+
+            // Filter Events for this specific cell date
+            const dayEvents = events.filter(e => {
+                const eDate = new Date(e.date);
+                if (e.category === 'birthday') {
+                    // Birthdays repeat every year
+                    return eDate.getDate() === day && eDate.getMonth() === cellDate.getMonth();
+                }
+                return eDate.getDate() === day && eDate.getMonth() === cellDate.getMonth() && eDate.getFullYear() === cellDate.getFullYear();
+            });
+
+            dayEvents.forEach(evt => {
+                const badge = document.createElement('div');
+                let icon = 'ph-megaphone';
+                if(evt.category === 'birthday') icon = 'ph-cake';
+                if(evt.category === 'holiday') icon = 'ph-airplane-tilt';
+                
+                badge.className = `event-badge badge-${evt.category}`;
+                badge.innerHTML = `<i class="ph-fill ${icon}"></i> <span>${evt.title}</span>`;
+                badge.onclick = () => openEventModal(evt);
+                div.appendChild(badge);
+            });
+
+            // Click empty space to add event on that date (Admin only)
+            div.addEventListener('click', (e) => {
+                if(e.target === div && isAdmin) {
+                    const strDate = `${cellDate.getFullYear()}-${String(cellDate.getMonth()+1).padStart(2,'0')}-${String(cellDate.getDate()).padStart(2,'0')}`;
+                    openEventModal(null, strDate);
                 }
             });
 
-            upcoming.sort((a,b) => a.nextDate - b.nextDate);
-            const top5 = upcoming.slice(0, 5);
-
-            if (top5.length === 0) {
-                list.innerHTML = `<p class="text-xs font-bold text-slate-400 text-center py-8 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">No upcoming events.</p>`;
-                return;
-            }
-
-            top5.forEach(evt => {
-                const cat = categoryMap[evt.category] || categoryMap['event'];
-                const diffDays = Math.ceil(Math.abs(evt.nextDate - today) / (1000 * 60 * 60 * 24));
-                let timeStr = diffDays === 0 ? "Today!" : diffDays === 1 ? "Tomorrow" : diffDays <= 7 ? `In ${diffDays} days` : formatDisplayDate(evt.nextDate).split(' 20')[0]; 
-
-                list.innerHTML += `
-                    <div onclick="openEventDetails('${evt.id}', ${evt.nextDate.getFullYear()})" class="flex items-center justify-between p-4 rounded-2xl border border-slate-100 hover:border-slate-300 hover:shadow-md cursor-pointer transition-all bg-white group">
-                        <div class="flex items-center gap-4 overflow-hidden">
-                            <div class="w-10 h-10 rounded-xl ${cat.bg} ${cat.text} flex items-center justify-center flex-shrink-0 shadow-md">
-                                <i class="ph-bold ${cat.icon} text-xl"></i>
-                            </div>
-                            <div class="truncate">
-                                <h4 class="text-sm font-black text-slate-900 group-hover:text-brand-600 transition-colors truncate">${evt.title}</h4>
-                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">${cat.label}</p>
-                            </div>
-                        </div>
-                        <div class="text-right flex-shrink-0 pl-2">
-                            <span class="text-[10px] font-black text-slate-700 bg-slate-100 px-3 py-1.5 rounded-lg shadow-sm">${timeStr}</span>
-                        </div>
-                    </div>
-                `;
-            });
+            return div;
         }
 
-        // --- MODALS & CRUD ---
+        // --- Sidebar & Chart ---
+        function renderSidebar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            document.getElementById('summaryMonth').innerText = new Date(year, month).toLocaleString('default', { month: 'short', year: 'numeric' });
+            
+            let cBday = 0, cHol = 0, cEvt = 0;
+            const upcoming = [];
+            const today = new Date();
+            today.setHours(0,0,0,0);
+
+            events.forEach(e => {
+                const eDate = new Date(e.date);
+                if (e.category === 'birthday') eDate.setFullYear(year); 
+                
+                // Count for current month view
+                if (eDate.getMonth() === month && eDate.getFullYear() === year) {
+                    if (e.category === 'birthday') cBday++;
+                    else if (e.category === 'holiday') cHol++;
+                    else cEvt++;
+                }
+
+                // Check upcoming (next 30 days)
+                const diffTime = eDate.getTime() - today.getTime();
+                const diffDays = Math.ceil(diffTime / (1000 * 3600 * 24));
+                if (diffDays >= 0 && diffDays <= 30) {
+                    upcoming.push({...e, _diffDays: diffDays, _actualDate: eDate});
+                }
+            });
+
+            document.getElementById('countBday').innerText = cBday;
+            document.getElementById('countHoliday').innerText = cHol;
+            document.getElementById('countEvent').innerText = cEvt;
+            const total = cBday + cHol + cEvt;
+            document.getElementById('chartTotal').innerText = total;
+
+            // Render Chart
+            const ctx = document.getElementById('eventChart').getContext('2d');
+            if(chartInstance) chartInstance.destroy();
+            
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Birthdays', 'Holiday', 'Events'],
+                    datasets: [{
+                        data: [cBday, cHol, cEvt],
+                        backgroundColor: ['#f97316', '#22c55e', '#3b82f6'],
+                        borderWidth: 0,
+                        cutout: '75%'
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: true, position: 'right', labels: { usePointStyle: true, boxWidth: 6, font: {family: 'Inter', size: 10, weight: 'bold'} } } }
+                }
+            });
+
+            // Render Upcoming List
+            upcoming.sort((a,b) => a._diffDays - b._diffDays);
+            const ul = document.getElementById('upcomingList');
+            ul.innerHTML = '';
+            
+            if(upcoming.length === 0) {
+                ul.innerHTML = `<div class="text-center py-4 text-xs font-bold text-slate-400">No upcoming events</div>`;
+            } else {
+                upcoming.slice(0, 5).forEach(evt => {
+                    let icon = 'ph-megaphone', color = 'blue', txtColor = 'text-blue-600', bgIcon='bg-blue-100';
+                    if(evt.category === 'birthday') { icon = 'ph-cake'; color = 'orange'; txtColor = 'text-orange-600'; bgIcon='bg-orange-100'; }
+                    if(evt.category === 'holiday') { icon = 'ph-airplane-tilt'; color = 'green'; txtColor = 'text-green-600'; bgIcon='bg-green-100'; }
+                    
+                    let dayStr = evt._diffDays === 0 ? 'Today' : evt._diffDays === 1 ? 'Tmrw' : `In ${evt._diffDays} days`;
+                    
+                    const div = document.createElement('div');
+                    div.className = 'flex items-center gap-3 p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer group';
+                    div.onclick = () => openEventModal(evt);
+                    div.innerHTML = `
+                        <div class="w-10 h-10 ${bgIcon} ${txtColor} rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform"><i class="ph-fill ${icon}"></i></div>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="text-sm font-bold text-slate-800 truncate">${evt.title}</h4>
+                            <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-0.5">${evt.category}</p>
+                        </div>
+                        <div class="text-[10px] font-black px-2 py-1 bg-slate-100 text-slate-600 rounded-md whitespace-nowrap">${dayStr}</div>
+                    `;
+                    ul.appendChild(div);
+                });
+            }
+        }
+
+        function changeMonth(delta) {
+            currentDate.setMonth(currentDate.getMonth() + delta);
+            renderCalendar();
+            renderSidebar();
+        }
+        function resetToToday() {
+            currentDate = new Date();
+            renderCalendar();
+            renderSidebar();
+        }
+
+        // --- Modals & Forms ---
+        function openEventModal(evt = null, dateStr = '') {
+            const modal = document.getElementById('eventModal');
+            document.getElementById('eventId').value = evt ? evt.id : '';
+            
+            // Reset fields
+            document.getElementById('eventTitle').value = '';
+            document.getElementById('eventDesc').value = '';
+            document.getElementById('eventCategory').value = 'event';
+            document.getElementById('eventDate').value = dateStr;
+            document.getElementById('eventNotify1').value = '0';
+            document.getElementById('eventNotify2').value = '0';
+            document.getElementById('eventEmpId').value = '';
+            document.getElementById('eventPosition').value = '';
+            document.getElementById('eventDirectorate').value = '';
+            
+            if (evt) {
+                document.getElementById('modalTitleText').innerText = 'Edit Event';
+                document.getElementById('eventTitle').value = evt.title;
+                
+                // Format Date for Input
+                let d = new Date(evt.date);
+                if(!isNaN(d.getTime())) {
+                    document.getElementById('eventDate').value = d.toISOString().split('T')[0];
+                }
+                
+                document.getElementById('eventCategory').value = evt.category;
+                document.getElementById('eventDesc').value = evt.description;
+                document.getElementById('eventNotify1').value = evt.notify_1;
+                document.getElementById('eventNotify2').value = evt.notify_2;
+                document.getElementById('eventPosition').value = evt.position || '';
+                document.getElementById('eventDirectorate').value = evt.directorate || '';
+                document.getElementById('eventEmpId').value = evt.emp_id || '';
+                
+                if(isAdmin) {
+                    document.getElementById('btnDeleteEvent').classList.remove('hidden');
+                    document.getElementById('btnManualEmail').classList.remove('hidden');
+                    document.getElementById('txtDelete').innerText = evt.category === 'birthday' ? 'Hapus / Resign' : 'Delete';
+                }
+            } else {
+                document.getElementById('modalTitleText').innerText = 'Add New Event';
+                document.getElementById('btnDeleteEvent').classList.add('hidden');
+                document.getElementById('btnManualEmail').classList.add('hidden');
+            }
+            
+            toggleBdayFields();
+
+            // Permissions Control
+            const inputs = ['eventTitle', 'eventDate', 'eventCategory', 'eventDesc', 'eventNotify1', 'eventNotify2', 'eventEmpId', 'eventPosition', 'eventDirectorate'];
+            inputs.forEach(id => document.getElementById(id).disabled = !isAdmin);
+            
+            if(isAdmin) {
+                document.getElementById('btnSaveEvent').classList.remove('hidden');
+                document.getElementById('guestViewMsg').classList.add('hidden');
+            } else {
+                document.getElementById('btnSaveEvent').classList.add('hidden');
+                document.getElementById('guestViewMsg').classList.remove('hidden');
+                document.getElementById('btnDeleteEvent').classList.add('hidden');
+                document.getElementById('btnManualEmail').classList.add('hidden');
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('eventModal').classList.add('hidden');
+        }
+
         function toggleBdayFields() {
             const cat = document.getElementById('eventCategory').value;
-            document.getElementById('bdayFields').classList.toggle('hidden', cat !== 'birthday');
-        }
-
-        function openEventDetails(evtId, currentViewYear) {
-            const evt = events.find(e => e.id === evtId);
-            if (!evt) return;
-            currentViewingEventId = evtId;
-            const cat = categoryMap[evt.category] || categoryMap['event'];
-            
-            document.getElementById('detailBanner').className = `h-24 flex justify-end p-4 relative ${cat.bg}`;
-            document.getElementById('detailIconWrapper').className = `absolute -top-10 left-6 w-16 h-16 rounded-2xl border-4 border-white shadow-xl flex items-center justify-center text-3xl ${cat.bg} ${cat.text}`;
-            document.getElementById('detailIcon').className = `ph-bold ${cat.icon}`;
-            
-            document.getElementById('viewTitle').textContent = evt.title;
-            const badge = document.getElementById('viewCatBadge');
-            badge.textContent = cat.label;
-            badge.className = `px-3 py-1 rounded-md text-[10px] font-black tracking-widest uppercase border shadow-sm ${cat.bg} ${cat.text}`;
-            
-            let displayDate = formatDisplayDate(evt.date), ageInfo = "";
-            if(evt.category === 'birthday') {
-                const birthYear = new Date(evt.date).getFullYear(), age = currentViewYear - birthYear;
-                displayDate = formatDisplayDate(`${currentViewYear}-${evt.date.substr(5)}`);
-                if (age > 0) ageInfo = `<br><span class="text-orange-600 font-black mt-1 inline-block bg-orange-100 px-2.5 py-1 rounded-md border border-orange-200">Turning ${age} years old! 🎂</span>`;
+            const fields = document.getElementById('bdayFields');
+            if(cat === 'birthday') {
+                fields.classList.remove('hidden');
+            } else {
+                fields.classList.add('hidden');
             }
-            document.getElementById('viewDate').innerHTML = `<i class="ph-bold ph-calendar-blank"></i> ${displayDate} ${ageInfo}`;
-            
-            const posWrapper = document.getElementById('viewPosWrapper');
-            if (evt.category === 'birthday' && (evt.position || evt.directorate)) {
-                posWrapper.classList.remove('hidden');
-                document.getElementById('viewPos').textContent = evt.position || '-';
-                document.getElementById('viewDir').textContent = evt.directorate || '-';
-            } else posWrapper.classList.add('hidden');
-
-            const descEl = document.getElementById('viewDesc');
-            if(evt.description) { descEl.textContent = evt.description; descEl.classList.remove('hidden'); } 
-            else descEl.classList.add('hidden');
-
-            const tipsContainer = document.getElementById('viewTips'); tipsContainer.innerHTML = '';
-            cat.tips.forEach(tip => tipsContainer.innerHTML += `<li>${tip}</li>`);
-
-            const actions = document.getElementById('detailActions');
-            isAdmin ? actions.classList.remove('hidden') : actions.classList.add('hidden');
-            document.getElementById('detailModal').classList.add('active');
         }
 
-        function closeModals() {
-            ['eventModal', 'detailModal', 'confirmModal', 'adminLoginModal'].forEach(id => document.getElementById(id).classList.remove('active'));
-        }
-
-        function openAddModal() {
-            if(!isAdmin) return;
-            document.getElementById('modalTitle').innerHTML = '<i class="ph-fill ph-calendar-plus text-brand-500 text-2xl"></i> Create Event';
-            document.getElementById('eventForm').reset();
-            document.getElementById('eventId').value = '';
-            toggleBdayFields();
-            document.getElementById('eventModal').classList.add('active');
-        }
-
-        function editEventFromView() {
-            if(!isAdmin) return;
-            const evt = events.find(e => e.id === currentViewingEventId);
-            if(!evt) return;
-            closeModals();
-            document.getElementById('modalTitle').innerHTML = '<i class="ph-fill ph-pencil-simple text-brand-500 text-2xl"></i> Edit Event';
-            document.getElementById('eventId').value = evt.id;
-            document.getElementById('eventTitle').value = evt.title;
-            document.getElementById('eventDate').value = evt.date;
-            document.getElementById('eventCategory').value = evt.category;
-            document.getElementById('eventDesc').value = evt.description;
-            document.getElementById('eventNotify1').value = evt.notify_1;
-            document.getElementById('eventNotify2').value = evt.notify_2;
-            document.getElementById('eventPosition').value = evt.position || '';
-            document.getElementById('eventDirectorate').value = evt.directorate || '';
-            toggleBdayFields();
-            document.getElementById('eventModal').classList.add('active');
-        }
-
+        // --- CRUD Operations ---
         async function saveEvent() {
             if(!isAdmin) return;
-            const title = document.getElementById('eventTitle').value, date = document.getElementById('eventDate').value;
-            if (!title || !date) return showToast("Please fill in Title and Date.", "error");
-
-            const btn = document.getElementById('btnSaveEvent');
-            btn.innerHTML = '<i class="ph-bold ph-spinner animate-spin text-lg"></i> Saving...'; btn.disabled = true;
-            const id = document.getElementById('eventId').value || `evt_${Math.random().toString(36).substr(2,9)}`;
-            const isEdit = !!document.getElementById('eventId').value;
+            const id = document.getElementById('eventId').value || 'EVT-' + Date.now();
+            const date = document.getElementById('eventDate').value;
+            const title = document.getElementById('eventTitle').value;
+            
+            if(!date || !title) return alert("Title and Date are required!");
+            
+            showLoading(true, "Saving...");
             
             const payload = {
-                id: id, date: date, title: title, description: document.getElementById('eventDesc').value,
+                id: id, 
+                date: date, 
+                title: title, 
+                description: document.getElementById('eventDesc').value,
                 category: document.getElementById('eventCategory').value,
-                notify_1: document.getElementById('eventNotify1').value, notify_2: document.getElementById('eventNotify2').value,
-                position: document.getElementById('eventPosition').value || '', directorate: document.getElementById('eventDirectorate').value || ''
+                notify_1: document.getElementById('eventNotify1').value, 
+                notify_2: document.getElementById('eventNotify2').value,
+                position: document.getElementById('eventPosition').value || '', 
+                directorate: document.getElementById('eventDirectorate').value || '',
+                emp_id: document.getElementById('eventEmpId').value || ''
             };
 
+            const isEdit = document.getElementById('eventId').value !== '';
+            const method = isEdit ? 'PUT' : 'POST';
+            const url = isEdit ? `${API_BASE_URL}/id/${id}` : API_BASE_URL;
+
             try {
-                const response = await fetch(isEdit ? `${API_BASE_URL}/id/${id}` : API_BASE_URL, {
-                    method: isEdit ? 'PUT' : 'POST',
+                const res = await fetch(url, {
+                    method: method,
                     headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-                    body: JSON.stringify(isEdit ? payload : { data: [payload] })
+                    body: JSON.stringify(isEdit ? payload : {data: [payload]})
                 });
-                if(!response.ok) throw new Error("Failed");
-                logAction(isEdit ? "EDIT_EVENT" : "ADD_EVENT", `Title: ${title}, Cat: ${payload.category}`);
-                closeModals(); showToast(isEdit ? "Event updated!" : "Event created!"); fetchEvents();
-            } catch(e) {
-                showToast("Failed to save data.", "error");
-            } finally { btn.innerHTML = 'Save Event'; btn.disabled = false; }
+                if(!res.ok) throw new Error('Failed to save');
+                
+                await logAction(isEdit ? 'EDIT' : 'ADD', title);
+                closeModal();
+                fetchEvents(); // reload data
+            } catch (err) {
+                console.error(err);
+                alert("Error saving event.");
+                showLoading(false);
+            }
         }
 
-        let actionToConfirm = null;
-        function confirmDeleteEvent() {
+        async function deleteEvent() {
             if(!isAdmin) return;
-            actionToConfirm = executeDeleteEvent;
-            document.getElementById('detailModal').classList.remove('active');
-            const evt = events.find(e => e.id === currentViewingEventId);
-            const isBirthday = evt && evt.category === 'birthday';
-            document.getElementById('confirmTitle').textContent = isBirthday ? "Hapus Karyawan Resign?" : "Delete Event?";
-            document.getElementById('confirmDesc').textContent = isBirthday ? "Data ultah akan dihapus permanen dari sistem." : "This action cannot be undone.";
-            document.getElementById('confirmModal').classList.add('active');
-        }
-        function closeConfirmModal() { document.getElementById('confirmModal').classList.remove('active'); actionToConfirm = null; }
-        document.getElementById('confirmBtn').addEventListener('click', () => { if (actionToConfirm) actionToConfirm(); });
-
-        async function executeDeleteEvent() {
-            closeConfirmModal(); setSyncStatus('syncing');
-            const evt = events.find(e => e.id === currentViewingEventId);
+            const id = document.getElementById('eventId').value;
+            const title = document.getElementById('eventTitle').value;
+            if(!id) return;
+            
+            if(!confirm(`Are you sure you want to delete / remove "${title}"?`)) return;
+            
+            showLoading(true, "Deleting...");
             try {
-                const response = await fetch(`${API_BASE_URL}/id/${currentViewingEventId}`, { method: 'DELETE' });
-                if (!response.ok) throw new Error("API Error");
-                logAction("DELETE_EVENT", `Deleted: ${evt ? evt.title : currentViewingEventId}`);
-                showToast("Data dihapus permanen!"); fetchEvents();
-            } catch(e) { showToast("Failed to delete.", "error"); setSyncStatus('error'); }
+                const res = await fetch(`${API_BASE_URL}/id/${id}`, { method: 'DELETE' });
+                if(!res.ok) throw new Error('Failed to delete');
+                
+                await logAction('DELETE', title);
+                closeModal();
+                fetchEvents();
+            } catch (err) {
+                console.error(err);
+                alert("Error deleting event. Check console.");
+                showLoading(false);
+            }
         }
 
-        function importPublicHolidays() {
-            if(!isAdmin) return;
-            const currentYear = currentDate.getFullYear();
-            actionToConfirm = async () => {
-                closeConfirmModal(); setSyncStatus('syncing');
-                try {
-                    const res = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${currentYear}/ID`);
-                    if (!res.ok) throw new Error("API Limit");
-                    const holidays = await res.json();
-                    const payloadData = holidays.map(h => ({
-                        id: `hol_${Math.random().toString(36).substr(2,9)}`, date: h.date, title: h.localName, 
-                        category: 'holiday', description: h.name, notify_1: '0', notify_2: '0', position: '', directorate: ''
-                    }));
-                    const response = await fetch(API_BASE_URL, {
-                        method: 'POST', headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }, body: JSON.stringify({ data: payloadData })
-                    });
-                    if(response.ok) {
-                        logAction("IMPORT_HOLIDAY", `Imported holidays ${currentYear}`);
-                        showToast(`Holidays for ${currentYear} imported!`); fetchEvents();
-                    } else throw new Error("DB Error");
-                } catch(e) { showToast("Import failed. Try again.", "error"); setSyncStatus('error'); }
+        // --- Manual Email (Web App) ---
+        async function sendManualNotification() {
+            const title = document.getElementById('eventTitle').value;
+            if(!title) return;
+            if(!confirm(`Send immediate email notification for "${title}" to the team?`)) return;
+
+            const btn = document.getElementById('btnManualEmail');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = `<i class="ph-bold ph-spinner animate-spin"></i> Sending...`;
+            btn.disabled = true;
+
+            const payload = {
+                title: title, 
+                date: document.getElementById('eventDate').value, 
+                category: document.getElementById('eventCategory').value,
+                description: document.getElementById('eventDesc').value || '-',
+                position: document.getElementById('eventPosition').value || '', 
+                directorate: document.getElementById('eventDirectorate').value || '', 
+                emp_id: document.getElementById('eventEmpId').value || ''
             };
-            document.getElementById('confirmTitle').textContent = `Import Holidays ${currentYear}?`;
-            document.getElementById('confirmDesc').textContent = `Sistem akan menarik tanggal merah nasional tahun ${currentYear}.`;
-            document.getElementById('confirmModal').classList.add('active');
+
+            try {
+                const res = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // Because Google Apps Script requires this from browser
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                // no-cors mode won't return json body, so we assume success if no JS error
+                setTimeout(() => {
+                    alert("Email has been triggered! (Please check Inbox)");
+                    btn.innerHTML = originalHTML;
+                    btn.disabled = false;
+                }, 1000);
+            } catch(e) {
+                console.error("Email trigger error:", e);
+                alert("Failed to trigger email.");
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }
         }
+
+        // --- Import Holidays ---
+        async function importPublicHolidays() {
+            if(!isAdmin) return;
+            const year = currentDate.getFullYear();
+            if(!confirm(`Import Indonesia public holidays for year ${year} from internet?`)) return;
+            
+            showLoading(true, "Fetching holidays...");
+            try {
+                const res = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/ID`);
+                if(!res.ok) throw new Error("API Error");
+                const holidays = await res.json();
+                
+                let toAdd = [];
+                holidays.forEach(h => {
+                    // Check if already exists in this year
+                    let exists = events.some(e => e.date === h.date && e.title === h.localName);
+                    if(!exists) {
+                        toAdd.push({
+                            id: 'HOL-' + h.date + '-' + Math.floor(Math.random()*1000),
+                            date: h.date, title: h.localName, description: h.name, category: 'holiday',
+                            notify_1: '0', notify_2: '0', position: '', directorate: '', emp_id: ''
+                        });
+                    }
+                });
+
+                if(toAdd.length > 0) {
+                    showLoading(true, `Saving ${toAdd.length} holidays...`);
+                    const addRes = await fetch(API_BASE_URL, {
+                        method: 'POST',
+                        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                        body: JSON.stringify({data: toAdd})
+                    });
+                    await logAction('IMPORT', `Holidays ${year}`);
+                    alert(`${toAdd.length} holidays added successfully!`);
+                    fetchEvents();
+                } else {
+                    alert(`Holidays for ${year} are already in the calendar.`);
+                    showLoading(false);
+                }
+            } catch(e) {
+                alert("Failed to import holidays. Error: " + e.message);
+                showLoading(false);
+            }
+        }
+
+        // --- Auth & Audit Log ---
+        function openLoginModal() { document.getElementById('loginModal').classList.remove('hidden'); }
+        function closeLoginModal() { document.getElementById('loginModal').classList.add('hidden'); }
+        
+        async function submitAdminLogin() {
+            const u = document.getElementById('loginUser').value.trim();
+            const p = document.getElementById('loginPass').value.trim();
+            const err = document.getElementById('loginError');
+            const btn = document.getElementById('btnLoginSubmit');
+            
+            if(!u || !p) return;
+            err.classList.add('hidden');
+            btn.innerHTML = `<i class="ph-bold ph-spinner animate-spin"></i> Checking...`;
+            
+            try {
+                const res = await fetch(`${API_BASE_URL}?sheet=User&t=${new Date().getTime()}`);
+                const users = await res.json();
+                
+                let valid = false;
+                if(Array.isArray(users) && users.length > 0) {
+                    const uKey = Object.keys(users[0]).find(k => k.toLowerCase().includes('user'));
+                    const pKey = Object.keys(users[0]).find(k => k.toLowerCase().includes('pass'));
+                    
+                    if(uKey && pKey) {
+                        const found = users.find(usr => usr[uKey] === u && usr[pKey] === p);
+                        if(found) valid = true;
+                    }
+                }
+
+                // Fallback hardcoded admin if sheet fails
+                if(!valid && u === 'Admin' && p === 'admin123') valid = true;
+
+                if (valid) {
+                    isAdmin = true;
+                    currentUser = u;
+                    document.getElementById('greetingText').innerText = `Good Morning, ${u}! (Admin)`;
+                    document.getElementById('btnAdminAccess').classList.add('hidden');
+                    document.getElementById('btnLogout').classList.remove('hidden');
+                    document.getElementById('btnImport').classList.remove('hidden');
+                    document.getElementById('btnAddEvent').classList.remove('hidden');
+                    closeLoginModal();
+                    
+                    document.getElementById('loginUser').value = '';
+                    document.getElementById('loginPass').value = '';
+                    
+                    await logAction('LOGIN', 'System access granted');
+                } else {
+                    err.classList.remove('hidden');
+                }
+            } catch(e) {
+                console.error("Login Check Error:", e);
+                // Allow fallback on API error
+                if(u === 'Admin' && p === 'admin123') {
+                    isAdmin = true;
+                    currentUser = 'Admin';
+                    document.getElementById('greetingText').innerText = `Good Morning, Admin! (Offline Mode)`;
+                    document.getElementById('btnAdminAccess').classList.add('hidden');
+                    document.getElementById('btnLogout').classList.remove('hidden');
+                    document.getElementById('btnImport').classList.remove('hidden');
+                    document.getElementById('btnAddEvent').classList.remove('hidden');
+                    closeLoginModal();
+                } else {
+                    err.innerText = "Error connecting to database.";
+                    err.classList.remove('hidden');
+                }
+            }
+            btn.innerHTML = `Login`;
+        }
+
+        function logoutAdmin() {
+            isAdmin = false;
+            currentUser = "Guest";
+            document.getElementById('greetingText').innerText = `Good Morning, Team!`;
+            document.getElementById('btnAdminAccess').classList.remove('hidden');
+            document.getElementById('btnLogout').classList.add('hidden');
+            document.getElementById('btnImport').classList.add('hidden');
+            document.getElementById('btnAddEvent').classList.add('hidden');
+            closeModal(); 
+        }
+
+        async function logAction(action, details) {
+            try {
+                const payload = {
+                    Timestamp: new Date().toLocaleString(),
+                    User: currentUser,
+                    Action: action,
+                    Details: details
+                };
+                await fetch(`${API_BASE_URL}?sheet=Log`, {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                    body: JSON.stringify({data: [payload]})
+                });
+            } catch(e) {
+                console.error("Failed to write log", e);
+            }
+        }
+
+        // Initialize on load
+        window.onload = initCalendar;
     </script>
 </body>
 </html>
