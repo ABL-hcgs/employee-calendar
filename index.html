@@ -8,13 +8,33 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; background-image: url('https://i.ibb.co.com/jvpLwN6/Untitled-design.png'); background-size: cover; background-attachment: fixed; background-position: center; }
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-        .calendar-day { aspect-ratio: 1; border: 1px solid #e5e7eb; padding: 4px; display: flex; flex-direction: column; background: rgba(255, 255, 255, 0.9); }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f3f4f6; 
+            background-image: url('https://i.ibb.co/jvpLwN6/Untitled-design.png'); 
+            background-size: cover; 
+            background-attachment: fixed; 
+            background-position: center top; 
+            background-repeat: no-repeat;
+        }
+        .calendar-grid { 
+            display: grid; 
+            grid-template-columns: repeat(7, minmax(0, 1fr)); 
+            gap: 4px; 
+        }
+        .calendar-day { 
+            min-height: 110px; 
+            border: 1px solid #e5e7eb; 
+            padding: 4px; 
+            display: flex; 
+            flex-direction: column; 
+            background: rgba(255, 255, 255, 0.9);
+            overflow: hidden; 
+        }
         .day-number { font-size: 0.875rem; font-weight: 500; text-align: right; margin-bottom: 2px; }
         .event-indicator { font-size: 0.7rem; padding: 2px 4px; border-radius: 4px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; color: white; }
         .event-birthday { background-color: #f97316; } .event-holiday { background-color: #22c55e; } .event-general { background-color: #3b82f6; } .event-physical { background-color: #eab308; } .event-emotional { background-color: #8b5cf6; } .event-financial { background-color: #ec4899; } .event-spiritual { background-color: #06b6d4; } .event-social { background-color: #f43f5e; } .event-environment { background-color: #14b8a6; }
-        .events-container { max-height: 50px; overflow-y: auto; scrollbar-width: thin; }
+        .events-container { max-height: 75px; overflow-y: auto; scrollbar-width: thin; }
         .events-container::-webkit-scrollbar { width: 4px; } .events-container::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
         .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
     </style>
@@ -126,7 +146,7 @@
     </div>
 
     <script>
-        // URL GOOGLE APPS SCRIPT SUDAH TERTEMPEL DI SINI:
+        // URL GOOGLE SCRIPT ANDA SUDAH TERPASANG DI SINI
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxHFr_gXVb9q0kGX0Q7ap6RcYOKiK_WONtIrw8d_hUAmGe9Bocat1YhwcagmfgToEFq/exec'; 
 
         let events = [];
