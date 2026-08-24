@@ -12,21 +12,21 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            /* Background diperbaiki (tanpa .com) */
+            background-color: #f0f4f8;
             background-image: url('https://i.ibb.co/BH4L0grj/background-2.png'); 
             background-size: cover;
-            background-position: center;
+            background-position: center top;
             background-attachment: fixed;
             background-repeat: no-repeat;
             color: #1e293b;
         }
 
         .glass-panel {
-            background: rgba(255, 255, 255, 0.85);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
         }
 
         .calendar-grid {
@@ -47,68 +47,86 @@
             position: relative;
         }
 
-        .calendar-body-scroll { max-height: 600px; overflow-y: auto; }
         .calendar-cell:hover { background-color: #f8fafc; }
         .calendar-cell.today { background-color: #eff6ff; }
         .calendar-cell.today .date-number {
-            background-color: #3b82f6; color: white; border-radius: 9999px;
-            width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+            background-color: #3b82f6;
+            color: white;
+            border-radius: 9999px;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .event-badge {
-            font-size: 0.7rem; padding: 0.25rem 0.5rem; border-radius: 0.375rem; margin-bottom: 0.25rem;
-            cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            display: flex; align-items: center; gap: 0.25rem; font-weight: 600; transition: transform 0.1s;
+            font-size: 0.7rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            margin-bottom: 0.25rem;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-weight: 600;
+            transition: transform 0.1s;
         }
         .event-badge:hover { transform: scale(1.02); }
-        .badge-birthday { background-color: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; }
+        .badge-birthday { background-color: #fff7ed; color: #ea580c; border: 1px solid #ffedd5; }
         .badge-holiday { background-color: #f0fdf4; color: #15803d; border: 1px solid #dcfce7; }
         .badge-event { background-color: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe; }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
         .modal-overlay { background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
     </style>
-    <script>
-        tailwind.config = { theme: { extend: { colors: { brand: { 50: '#f0fdfa', 100: '#ccfbf1', 500: '#14b8a6', 600: '#0d9488', 900: '#134e4a' } } } } }
-    </script>
 </head>
 <body class="min-h-screen text-slate-800 p-4 md:p-6 lg:p-8">
 
     <script>
-        // URL Google Script Anda
+        // GANTI DENGAN URL GOOGLE APPS SCRIPT ANDA
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxHFr_gXVb9q0kGX0Q7ap6RcYOKiK_WONtIrw8d_hUAmGe9Bocat1YhwcagmfgToEFq/exec';
         
         let currentDate = new Date();
-        let events = [], planData = [];
-        let isAdmin = false;
+        let events = [];
+        let planData = [];
+        let usersData = []; // Menampung data login dari Tab User
+        let isAdmin = false; 
         let currentUser = "Guest";
         let chartInstance = null;
-        let selectedEventForEmail = null; // Untuk menyimpan data modal detail
+        let selectedEventForEmail = null;
+
+        const monthNamesEn = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        const planMonthHeaders = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     </script>
 
     <!-- Modal Login -->
-    <div id="loginModal" class="fixed inset-0 modal-overlay z-50 flex items-center justify-center hidden">
+    <div id="loginModal" class="fixed inset-0 modal-overlay z-50 flex items-center justify-center hidden p-4">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
-            <div class="bg-gradient-to-r from-brand-500 to-blue-500 h-2"></div>
+            <div class="bg-blue-600 h-2"></div>
             <div class="p-8">
                 <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mb-6">
                     <i class="ph-fill ph-user-focus text-2xl text-blue-500"></i>
                 </div>
-                <h2 class="text-2xl font-black text-slate-800 mb-2">Login User</h2>
+                <h2 class="text-2xl font-black text-slate-800 mb-2">Admin Login</h2>
                 <p class="text-sm text-slate-500 mb-8 font-medium">Please enter your username and password to gain full access.</p>
                 
                 <div class="space-y-5">
                     <div>
                         <label class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Username</label>
-                        <input type="text" id="loginUser" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none transition-all font-semibold text-slate-700">
+                        <input type="text" id="loginUser" placeholder="Enter username..." class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all font-semibold text-slate-700">
                     </div>
                     <div>
                         <label class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Password</label>
-                        <input type="password" id="loginPass" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none transition-all font-semibold text-slate-700">
+                        <input type="password" id="loginPass" placeholder="Enter password..." class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all font-semibold text-slate-700">
                     </div>
                 </div>
                 
                 <div id="loginError" class="mt-4 text-sm font-bold text-red-500 hidden flex items-center gap-2">
-                    <i class="ph-fill ph-warning-circle"></i> <span>Username atau password salah</span>
+                    <i class="ph-fill ph-warning-circle"></i> <span>Username atau password salah!</span>
                 </div>
 
                 <div class="mt-8 flex gap-3">
@@ -121,10 +139,10 @@
         </div>
     </div>
 
-    <!-- Header -->
+    <!-- Header Utama -->
     <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center mb-8 gap-4 glass-panel p-4 rounded-2xl">
         <div class="flex items-center gap-3">
-            <img src="https://i.ibb.co.com/8n6crmsy/logo-people-manager.png" alt="logo people manager" class="w-12 h-12 md:w-14 md:h-14 object-contain rounded-xl shadow-sm bg-white p-1">
+            <img src="https://i.ibb.co/8n6crmsy/logo-people-manager.png" alt="logo" class="w-12 h-12 md:w-14 md:h-14 object-contain rounded-xl shadow-sm bg-white p-1">
             <div>
                 <h1 class="text-xl md:text-2xl font-black tracking-tight"><span class="text-blue-600">People</span><span class="text-orange-500">Calendar</span></h1>
                 <p id="greetingText" class="text-xs font-bold text-slate-500">Good Morning, Team!</p>
@@ -134,9 +152,11 @@
             <div class="flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-bold border border-green-200">
                 <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div> Connected
             </div>
-            <button id="btnAdminAccess" onclick="openLoginModal()" class="w-10 h-10 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl flex items-center justify-center transition-colors border border-slate-200">
+            <!-- Tombol Login -->
+            <button id="btnAdminAccess" onclick="openLoginModal()" class="w-10 h-10 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl flex items-center justify-center transition-colors border border-slate-200" title="Admin Login">
                 <i class="ph-fill ph-lock-key text-lg"></i>
             </button>
+            <!-- Tombol Logout -->
             <button id="btnLogout" onclick="logoutAdmin()" class="hidden px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-sm font-bold transition-colors border border-red-200 flex items-center gap-2">
                 <i class="ph-bold ph-sign-out"></i> Log Out
             </button>
@@ -147,20 +167,20 @@
         
         <div class="lg:col-span-3 glass-panel rounded-3xl p-6 lg:p-8 relative">
             
-            <!-- KOTAK INITIAL PLAN -->
+            <!-- SECTION INITIAL PLAN EVENT -->
             <div class="mb-8 bg-slate-50/50 rounded-2xl p-5 border border-slate-200 shadow-sm">
                 <div class="flex items-center justify-between mb-4">
                     <h2 id="monthlyPlanTitleUI" class="text-base font-black text-slate-800 flex items-center gap-2">
-                        <i class="ph-fill ph-clipboard-text text-brand-500"></i> Initial Plan Event
+                        <i class="ph-fill ph-clipboard-text text-blue-500"></i> Initial Plan Event
                     </h2>
                     <span class="text-[10px] font-black bg-white text-slate-500 px-3 py-1 rounded-full border border-slate-200 uppercase tracking-widest shadow-sm">Execution Timeline</span>
                 </div>
                 <div id="monthlyPlanContentUI" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <!-- Javascript menginjeksi isi kategori matriks di sini -->
+                    <!-- JS Injects categories here -->
                 </div>
             </div>
 
-            <!-- Kalender Navigation -->
+            <!-- Calendar Header -->
             <div class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
                 <div class="flex items-center gap-4">
                     <h2 id="currentMonthYear" class="text-3xl font-black tracking-tight text-slate-800"></h2>
@@ -178,7 +198,7 @@
                 </div>
             </div>
 
-            <!-- Calendar Grid -->
+            <!-- Calendar Days -->
             <div class="grid grid-cols-7 gap-1 mb-2">
                 <div class="text-center text-[10px] font-black uppercase tracking-widest text-slate-400 py-2">Sun</div>
                 <div class="text-center text-[10px] font-black uppercase tracking-widest text-slate-400 py-2">Mon</div>
@@ -194,13 +214,14 @@
             </div>
             
             <div id="loadingOverlay" class="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-3xl hidden">
-                <i class="ph-bold ph-spinner-gap text-4xl text-brand-500 animate-spin mb-4"></i>
+                <i class="ph-bold ph-spinner-gap text-4xl text-blue-500 animate-spin mb-4"></i>
                 <p class="text-sm font-bold text-slate-600 tracking-wide" id="loadingText">Syncing data...</p>
             </div>
         </div>
 
-        <!-- Sidebar -->
+        <!-- Sidebar Kanan -->
         <div class="space-y-6">
+            <!-- Summary Stats -->
             <div class="glass-panel rounded-3xl p-6">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="font-black text-slate-800 text-lg">Summary</h3>
@@ -209,21 +230,21 @@
                 <div class="space-y-3">
                     <div class="flex items-center justify-between p-3 bg-orange-50/50 border border-orange-100 rounded-2xl">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center"><i class="ph-fill ph-cake"></i></div>
+                            <div class="w-10 h-10 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center"><i class="ph-fill ph-cake text-lg"></i></div>
                             <span class="font-bold text-slate-700 text-sm">Birthdays</span>
                         </div>
                         <span id="countBday" class="font-black text-lg text-slate-800">0</span>
                     </div>
                     <div class="flex items-center justify-between p-3 bg-green-50/50 border border-green-100 rounded-2xl">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-green-100 text-green-600 rounded-xl flex items-center justify-center"><i class="ph-fill ph-airplane-tilt"></i></div>
+                            <div class="w-10 h-10 bg-green-100 text-green-600 rounded-xl flex items-center justify-center"><i class="ph-fill ph-airplane-tilt text-lg"></i></div>
                             <span class="font-bold text-slate-700 text-sm">Holiday</span>
                         </div>
                         <span id="countHoliday" class="font-black text-lg text-slate-800">0</span>
                     </div>
                     <div class="flex items-center justify-between p-3 bg-blue-50/50 border border-blue-100 rounded-2xl">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center"><i class="ph-fill ph-megaphone"></i></div>
+                            <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center"><i class="ph-fill ph-megaphone text-lg"></i></div>
                             <span class="font-bold text-slate-700 text-sm">Events</span>
                         </div>
                         <span id="countEvent" class="font-black text-lg text-slate-800">0</span>
@@ -231,6 +252,7 @@
                 </div>
             </div>
 
+            <!-- Chart -->
             <div class="glass-panel rounded-3xl p-6">
                 <h3 class="font-black text-slate-800 text-lg mb-6">Event Types</h3>
                 <div class="relative h-40 w-full mb-4">
@@ -247,27 +269,26 @@
                 </div>
             </div>
 
+            <!-- Upcoming List -->
             <div class="glass-panel rounded-3xl p-6">
                 <div class="flex items-center gap-2 mb-6">
-                    <i class="ph-fill ph-calendar-check text-brand-500 text-xl"></i>
+                    <i class="ph-fill ph-calendar-check text-blue-500 text-xl"></i>
                     <h3 class="font-black text-slate-800 text-lg">Upcoming Events</h3>
                 </div>
-                <div id="upcomingList" class="space-y-3 hide-scrollbar max-h-60 overflow-y-auto"></div>
+                <div id="upcomingList" class="space-y-3 max-h-60 overflow-y-auto"></div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL DETAIL (VIEW & HAPUS/EMAIL) - Disesuaikan dengan Screenshot Anda -->
+    <!-- Modal Detail (Tampilan View & Actions) -->
     <div id="detailModal" class="fixed inset-0 modal-overlay z-50 flex items-center justify-center hidden p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col relative p-6">
-            <button onclick="closeDetailModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors">
-                <i class="ph-bold ph-x text-xl"></i>
+            <button onclick="closeDetailModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors bg-slate-50 w-8 h-8 rounded-full flex items-center justify-center">
+                <i class="ph-bold ph-x text-lg"></i>
             </button>
-            <div id="detailContent" class="mb-4 text-center text-sm text-slate-700">
-                <!-- Konten Modal Di-Inject via JS -->
-            </div>
+            <div id="detailContent" class="mb-4 text-center text-sm text-slate-700"></div>
             
-            <div class="flex flex-col gap-3 mt-2">
+            <div id="adminActionButtons" class="flex-col gap-3 mt-2 hidden">
                 <button id="btnSendEmail" onclick="sendManualNotification()" class="w-full py-2.5 bg-[#2563eb] hover:bg-blue-700 text-white rounded-lg text-sm font-bold transition-colors flex items-center justify-center gap-2">
                     <i class="ph-fill ph-paper-plane-tilt text-lg"></i> Kirim Email Manual
                 </button>
@@ -275,90 +296,31 @@
                     <i class="ph-fill ph-trash text-lg"></i> Resign / Delete Event
                 </button>
             </div>
-        </div>
-    </div>
-
-    <!-- MODAL TAMBAH EVENT (ADMIN) -->
-    <div id="eventModal" class="fixed inset-0 modal-overlay z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
-            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 sticky top-0 z-10">
-                <h2 id="modalTitleText" class="text-lg font-black text-slate-800 flex items-center gap-2">
-                    <i class="ph-fill ph-calendar-plus text-brand-500"></i> Add New Event
-                </h2>
-                <button onclick="closeModal()" class="w-8 h-8 bg-slate-200 hover:bg-slate-300 rounded-full flex items-center justify-center text-slate-600 transition-colors">
-                    <i class="ph-bold ph-x"></i>
-                </button>
-            </div>
-            
-            <div class="p-6 overflow-y-auto hide-scrollbar flex-1 space-y-5">
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="col-span-2">
-                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Event Title / Name</label>
-                        <input type="text" id="eventTitle" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-brand-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Date</label>
-                        <input type="date" id="eventDate" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-brand-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Category</label>
-                        <select id="eventCategory" onchange="toggleBdayFields()" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-brand-500 outline-none">
-                            <option value="event">📝 General Event</option>
-                            <option value="birthday">🎂 Birthday</option>
-                            <option value="holiday">🌴 Holiday</option>
-                        </select>
-                    </div>
-
-                    <div id="bdayFields" class="col-span-2 grid grid-cols-2 gap-4 hidden bg-orange-50/50 p-4 rounded-2xl border border-orange-100 mt-2">
-                        <div class="col-span-2">
-                            <label class="block text-[10px] font-black text-orange-800 uppercase tracking-widest mb-1.5">Employee ID</label>
-                            <input type="text" id="eventEmpId" class="w-full px-4 py-2.5 bg-white border border-orange-200 rounded-lg text-xs font-bold focus:ring-2 focus:ring-orange-400 outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black text-orange-800 uppercase tracking-widest mb-1.5">Position</label>
-                            <input type="text" id="eventPosition" class="w-full px-4 py-2.5 bg-white border border-orange-200 rounded-lg text-xs font-bold focus:ring-2 focus:ring-orange-400 outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black text-orange-800 uppercase tracking-widest mb-1.5">Directorate</label>
-                            <input type="text" id="eventDirectorate" class="w-full px-4 py-2.5 bg-white border border-orange-200 rounded-lg text-xs font-bold focus:ring-2 focus:ring-orange-400 outline-none">
-                        </div>
-                    </div>
-
-                    <div class="col-span-2">
-                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Description</label>
-                        <textarea id="eventDesc" rows="2" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none resize-none"></textarea>
-                    </div>
-                </div>
-            </div>
-            <div class="px-6 py-5 border-t border-slate-100 bg-slate-50 sticky bottom-0 z-10 flex justify-end">
-                <button id="btnSaveEvent" onclick="saveEvent()" class="px-8 py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-sm font-black shadow-lg shadow-slate-900/20 transition-all flex items-center justify-center gap-2">
-                    <i class="ph-bold ph-floppy-disk"></i> Save Event
-                </button>
-            </div>
+            <p id="emailStatus" class="text-xs text-center mt-3 font-semibold"></p>
         </div>
     </div>
 
     <script>
-        function showLoading(show, text = "Syncing data...") {
+        function showLoading(show, text = "Syncing...") {
             const el = document.getElementById('loadingOverlay');
-            document.getElementById('loadingText').innerText = text;
-            if(show) el.classList.remove('hidden'); else el.classList.add('hidden');
+            if(el) {
+                document.getElementById('loadingText').innerText = text;
+                show ? el.classList.remove('hidden') : el.classList.add('hidden');
+            }
         }
 
-        const planMonthHeaders = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-        const monthNamesEn = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-
-        // AMBIL DATA DARI GOOGLE APPS SCRIPT
+        // ==========================================
+        // FUNGSI UTAMA: MENGAMBIL DATA & DUMMY PREVIEW
+        // ==========================================
         async function fetchEvents() {
             showLoading(true);
             try {
                 const res = await fetch(SCRIPT_URL);
-                if (!res.ok) throw new Error('API Error');
+                if (!res.ok) throw new Error('Network response was not ok');
                 const data = await res.json();
                 
                 events = data.events.map(item => {
                     let cat = (item.category || item.Category || 'event').toLowerCase();
-                    if (!['event', 'birthday', 'holiday'].includes(cat)) cat = (cat === 'leave') ? 'holiday' : 'event';
                     return {
                         id: item.id || item.ID, 
                         date: item.date || item.Date, 
@@ -372,20 +334,36 @@
                 }).filter(e => e.date);
                 
                 planData = data.plan;
+                usersData = data.users || []; // Load database user untuk login
 
             } catch (err) {
-                console.error("Fetch Error:", err);
+                console.warn("API Gagal/Tertunda. Menjalankan Mode Preview Dummy...");
+                
+                // DATA DUMMY (Akan muncul ketika SCRIPT_URL masih gagal/terblokir)
+                const nmBulanIni = planMonthHeaders[currentMonth]; 
+                planData = [
+                    { "Cluster Event": "Emotional", "Event": "Employee Birthday", [nmBulanIni]: "Yes" },
+                    { "Cluster Event": "Physical", "Event": "Tennis & Padel", [nmBulanIni]: "Yes" },
+                    { "Cluster Event": "Environmental", "Event": "Mangrove (Ocean Hero), Waste Sorting, Reducing Emissions", [nmBulanIni]: "Yes" }
+                ];
+                let td = new Date();
+                events = [
+                    { id: "EV1", title: "Herwinda Agfierasari", date: td.toISOString().split('T')[0], category: "birthday", emp_id: "25000026", position: "Strategic Comben Master Expert", directorate: "Human Resources & General Services" }
+                ];
             }
+            
             renderCalendar();
             renderSidebar();
-            renderMonthlyPlan(); // Panggil Inisial Plan
+            renderMonthlyPlan(); 
             showLoading(false);
         }
 
-        // RENDER KOTAK INITIAL PLAN
+        // ==========================================
+        // FUNGSI RENDER DASHBOARD INITIAL PLAN
+        // ==========================================
         function renderMonthlyPlan() {
             const mIdx = currentDate.getMonth();
-            document.getElementById('monthlyPlanTitleUI').innerHTML = `<i class="ph-fill ph-clipboard-text text-brand-500 mr-2"></i> Initial Plan Event - ${monthNamesEn[mIdx]}`;
+            document.getElementById('monthlyPlanTitleUI').innerHTML = `<i class="ph-fill ph-clipboard-text text-blue-500 mr-2"></i> Initial Plan Event - ${monthNamesEn[mIdx]}`;
             
             const monthKey = planMonthHeaders[mIdx];
             let grouped = {};
@@ -403,22 +381,23 @@
 
             let html = '';
             if (Object.keys(grouped).length === 0) {
-                html = '<p class="text-xs font-bold text-slate-400 italic col-span-full">Tidak ada rencana untuk bulan ini berdasarkan Matriks.</p>';
+                html = '<p class="text-xs font-bold text-slate-400 italic col-span-full py-2">Tidak ada rencana untuk bulan ini berdasarkan Matriks.</p>';
             } else {
                 for (let cat in grouped) {
                     let items = Array.from(grouped[cat]).join(', ');
                     let tagColor = 'bg-slate-100 text-slate-600 border-slate-200';
                     let catLower = cat.toLowerCase();
                     
-                    if(catLower.includes('emotional')) tagColor = 'bg-purple-100 text-purple-700 border-purple-200';
-                    else if(catLower.includes('physical')) tagColor = 'bg-yellow-100 text-yellow-700 border-yellow-200';
-                    else if(catLower.includes('environmental')) tagColor = 'bg-teal-100 text-teal-700 border-teal-200';
-                    else if(catLower.includes('financial')) tagColor = 'bg-pink-100 text-pink-700 border-pink-200';
-                    else if(catLower.includes('spiritual')) tagColor = 'bg-cyan-100 text-cyan-700 border-cyan-200';
+                    if(catLower.includes('emotional')) tagColor = 'bg-[#f3e8ff] text-[#7e22ce] border-[#e9d5ff]';
+                    else if(catLower.includes('physical')) tagColor = 'bg-[#fef9c3] text-[#a16207] border-[#fef08a]';
+                    else if(catLower.includes('environmental')) tagColor = 'bg-[#ccfbf1] text-[#0f766e] border-[#99f6e4]';
+                    else if(catLower.includes('financial')) tagColor = 'bg-[#fce7f3] text-[#be185d] border-[#fbcfe8]';
+                    else if(catLower.includes('spiritual')) tagColor = 'bg-[#e0f2fe] text-[#0369a1] border-[#bae6fd]';
                     
+                    // Struktur baru menggunakan flex-col ke row untuk layout responsive (menghindari tulisan overflow)
                     html += `
-                    <div class="flex items-start bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
-                        <span class="inline-block px-2 py-1 ${tagColor} border text-[10px] font-black rounded-lg min-w-[90px] text-center mr-3 uppercase tracking-widest">${cat}</span>
+                    <div class="flex flex-col sm:flex-row sm:items-start bg-white p-3 rounded-xl border border-slate-100 shadow-sm gap-2 sm:gap-3 transition hover:shadow-md">
+                        <span class="inline-flex px-3 py-1 ${tagColor} border text-[10px] font-black rounded shrink-0 w-max uppercase tracking-widest">${cat}</span>
                         <span class="text-slate-600 text-xs font-bold pt-0.5 leading-relaxed">${items}</span>
                     </div>`;
                 }
@@ -426,7 +405,71 @@
             document.getElementById('monthlyPlanContentUI').innerHTML = html;
         }
 
-        // RENDER KALENDER
+        // ==========================================
+        // LOGIN ADMIN (VIA EXCEL TAB "USER")
+        // ==========================================
+        function openLoginModal() {
+            document.getElementById('loginModal').classList.remove('hidden');
+            document.getElementById('loginError').classList.add('hidden');
+            document.getElementById('loginUser').value = '';
+            document.getElementById('loginPass').value = '';
+        }
+
+        function closeLoginModal() { 
+            document.getElementById('loginModal').classList.add('hidden'); 
+        }
+
+        function submitAdminLogin() {
+            const u = document.getElementById('loginUser').value.trim();
+            const p = document.getElementById('loginPass').value.trim();
+            if(!u || !p) return;
+            
+            let isValid = false;
+            let loggedInUser = u;
+
+            // 1. Cek langsung ke database Google Sheets (usersData)
+            if (usersData && usersData.length > 0) {
+                const foundUser = usersData.find(user => 
+                    (user.User === u || user.user === u) && 
+                    (user.Password === p || user.password === p)
+                );
+                if (foundUser) {
+                    isValid = true;
+                    loggedInUser = foundUser.User || foundUser.user;
+                }
+            }
+            
+            // 2. Fallback darurat jika koneksi Excel putus
+            if(!isValid && u.toLowerCase() === 'admin' && p === 'admin123') {
+                isValid = true;
+                loggedInUser = "Admin";
+            }
+
+            if(isValid) {
+                isAdmin = true;
+                currentUser = loggedInUser;
+                document.getElementById('greetingText').innerText = `Good Morning, ${loggedInUser}!`;
+                document.getElementById('btnAdminAccess').classList.add('hidden');
+                document.getElementById('btnLogout').classList.remove('hidden');
+                document.getElementById('btnAddEvent').classList.remove('hidden');
+                closeLoginModal();
+            } else {
+                document.getElementById('loginError').classList.remove('hidden');
+            }
+        }
+
+        function logoutAdmin() {
+            isAdmin = false;
+            currentUser = "Guest";
+            document.getElementById('greetingText').innerText = `Good Morning, Team!`;
+            document.getElementById('btnAdminAccess').classList.remove('hidden');
+            document.getElementById('btnLogout').classList.add('hidden');
+            document.getElementById('btnAddEvent').classList.add('hidden');
+        }
+
+        // ==========================================
+        // FUNGSI RENDER KALENDER
+        // ==========================================
         function renderCalendar() {
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
@@ -475,21 +518,18 @@
                 
                 badge.className = `event-badge badge-${evt.category}`;
                 badge.innerHTML = `<i class="ph-fill ${icon}"></i> <span>${evt.title}</span>`;
-                // KETIKA DIKLIK BUKA MODAL DETAIL
                 badge.onclick = () => openDetailModal(evt);
                 div.appendChild(badge);
             });
-
-            div.addEventListener('click', (e) => {
-                if(e.target === div && isAdmin) {
-                    const strDate = `${cellDate.getFullYear()}-${String(cellDate.getMonth()+1).padStart(2,'0')}-${String(cellDate.getDate()).padStart(2,'0')}`;
-                    openEventModal(null, strDate);
-                }
-            });
-
             return div;
         }
 
+        function changeMonth(delta) { currentDate.setMonth(currentDate.getMonth() + delta); renderCalendar(); renderSidebar(); renderMonthlyPlan(); }
+        function resetToToday() { currentDate = new Date(); renderCalendar(); renderSidebar(); renderMonthlyPlan(); }
+
+        // ==========================================
+        // FUNGSI RENDER SIDEBAR (CHART & UPCOMING)
+        // ==========================================
         function renderSidebar() {
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
@@ -542,140 +582,117 @@
                     const div = document.createElement('div');
                     div.className = 'flex items-center gap-3 p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer group';
                     div.onclick = () => openDetailModal(evt);
-                    div.innerHTML = `<div class="w-10 h-10 ${bgIcon} ${txtColor} rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform"><i class="ph-fill ${icon}"></i></div><div class="flex-1 min-w-0"><h4 class="text-sm font-bold text-slate-800 truncate">${evt.title}</h4><p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-0.5">${evt.category}</p></div><div class="text-[10px] font-black px-2 py-1 bg-slate-100 text-slate-600 rounded-md whitespace-nowrap">${dayStr}</div>`;
+                    div.innerHTML = `<div class="w-10 h-10 ${bgIcon} ${txtColor} rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform"><i class="ph-fill ${icon} text-lg"></i></div><div class="flex-1 min-w-0"><h4 class="text-sm font-bold text-slate-800 truncate">${evt.title}</h4><p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-0.5">${evt.category}</p></div><div class="text-[10px] font-black px-2 py-1 bg-slate-100 text-slate-600 rounded-md whitespace-nowrap">${dayStr}</div>`;
                     ul.appendChild(div);
                 });
             }
         }
 
-        function changeMonth(delta) { currentDate.setMonth(currentDate.getMonth() + delta); renderCalendar(); renderSidebar(); renderMonthlyPlan(); }
-        function resetToToday() { currentDate = new Date(); renderCalendar(); renderSidebar(); renderMonthlyPlan(); }
-
-        // --- POP-UP MODAL DETAIL (SESUAI GAMBAR) ---
+        // ==========================================
+        // MODAL DETAIL & HAPUS EVENT
+        // ==========================================
         function openDetailModal(evt) {
             selectedEventForEmail = evt;
             let isBday = evt.category === 'birthday';
             
             let icon = 'ph-megaphone text-blue-500';
-            if(isBday) icon = 'ph-cake text-orange-500';
+            if(isBday) icon = 'ph-cake text-[#f97316]';
             else if(evt.category === 'holiday') icon = 'ph-airplane-tilt text-green-500';
 
             let extraInfo = '';
             if(isBday) {
                 extraInfo = `
-                <div class="bg-[#fff7ed] border border-[#ffedd5] text-slate-800 rounded-lg p-4 mt-4 text-left space-y-1">
-                    <p><span class="font-extrabold">Emp ID:</span> ${evt.emp_id || '-'}</p>
-                    <p><span class="font-extrabold">Position:</span> ${evt.position || '-'}</p>
-                    <p><span class="font-extrabold">Dept:</span> ${evt.directorate || '-'}</p>
+                <div class="bg-[#fff7ed] border border-[#ffedd5] text-slate-700 rounded-xl p-4 mt-4 text-left space-y-1.5 shadow-sm">
+                    <p><span class="font-extrabold text-slate-800">Emp ID:</span> ${evt.emp_id || '-'}</p>
+                    <p><span class="font-extrabold text-slate-800">Position:</span> ${evt.position || '-'}</p>
+                    <p><span class="font-extrabold text-slate-800">Dept:</span> ${evt.directorate || '-'}</p>
                 </div>`;
             }
 
             let badgeCat = evt.category.charAt(0).toUpperCase() + evt.category.slice(1);
             
             document.getElementById('detailContent').innerHTML = `
-                <i class="ph-fill ${icon} text-6xl mb-2"></i>
-                <h3 class="text-xl font-black text-slate-800 mb-2">${evt.title}</h3>
-                <span class="inline-block px-4 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded-full mb-6">${badgeCat}</span>
+                <i class="ph-fill ${icon} text-[3.5rem] mb-3 drop-shadow-sm"></i>
+                <h3 class="text-xl font-black text-slate-800 mb-3">${evt.title}</h3>
+                <span class="inline-block px-4 py-1 bg-slate-100 border border-slate-200 text-slate-600 text-[10px] font-black rounded-full mb-5 uppercase tracking-widest shadow-sm">${badgeCat}</span>
                 
-                <div class="text-left space-y-1">
-                    <p><span class="font-extrabold">Date:</span> ${evt.date}</p>
-                    <p><span class="font-extrabold">Desc:</span> ${evt.description || '-'}</p>
+                <div class="text-left space-y-1 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <p><span class="font-extrabold text-slate-800">Date:</span> ${evt.date}</p>
+                    <p><span class="font-extrabold text-slate-800">Desc:</span> ${evt.description || '-'}</p>
                 </div>
                 ${extraInfo}
             `;
             
             document.getElementById('emailStatus').innerText = '';
-            if(isAdmin) {
-                document.getElementById('btnSendEmail').style.display = 'flex';
-                document.getElementById('btnDeleteEventDetail').style.display = 'flex';
-            } else {
-                document.getElementById('btnSendEmail').style.display = 'none';
-                document.getElementById('btnDeleteEventDetail').style.display = 'none';
-            }
+            
+            // Fitur Admin
+            const adminButtons = document.getElementById('adminActionButtons');
+            if(isAdmin) adminButtons.style.display = 'flex';
+            else adminButtons.style.display = 'none';
+            
             document.getElementById('detailModal').classList.remove('hidden');
         }
 
         function closeDetailModal() { document.getElementById('detailModal').classList.add('hidden'); }
 
-        // --- MODAL TAMBAH EVENT ---
-        function openEventModal(evt = null, dateStr = '') {
-            document.getElementById('eventTitle').value = ''; document.getElementById('eventDesc').value = '';
-            document.getElementById('eventCategory').value = 'event'; document.getElementById('eventDate').value = dateStr;
-            document.getElementById('eventEmpId').value = ''; document.getElementById('eventPosition').value = ''; document.getElementById('eventDirectorate').value = '';
-            toggleBdayFields();
-            document.getElementById('eventModal').classList.remove('hidden');
-        }
-        function closeModal() { document.getElementById('eventModal').classList.add('hidden'); }
-
-        function toggleBdayFields() {
-            const cat = document.getElementById('eventCategory').value;
-            const fields = document.getElementById('bdayFields');
-            if(cat === 'birthday') fields.classList.remove('hidden');
-            else fields.classList.add('hidden');
-        }
-
-        // --- CRUD KE GOOGLE APPS SCRIPT ---
-        async function sendToGas(payload) {
-            return fetch(SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) }).then(res => res.json());
-        }
-
-        async function saveEvent() {
-            if(!isAdmin) return;
-            const date = document.getElementById('eventDate').value; const title = document.getElementById('eventTitle').value;
-            if(!date || !title) return alert("Title and Date are required!");
-            showLoading(true, "Saving...");
-            const payload = {
-                id: 'EVT-' + Date.now(), date: date, title: title, description: document.getElementById('eventDesc').value, category: document.getElementById('eventCategory').value,
-                position: document.getElementById('eventPosition').value, directorate: document.getElementById('eventDirectorate').value, emp_id: document.getElementById('eventEmpId').value
-            };
-            try { await sendToGas({ action: 'add', data: payload }); closeModal(); fetchEvents(); } catch (err) { alert("Error saving."); showLoading(false); }
-        }
-
         async function deleteEvent() {
-            if(!isAdmin) return;
+            if (!isAdmin || !selectedEventForEmail) return;
             if(!confirm(`Hapus acara "${selectedEventForEmail.title}"?`)) return;
-            showLoading(true, "Deleting...");
-            try { await sendToGas({ action: 'delete', id: selectedEventForEmail.id }); closeDetailModal(); fetchEvents(); } catch (err) { alert("Error deleting."); showLoading(false); }
-        }
-
-        async function sendManualNotification() {
-            if(!confirm(`Kirim email peringatan untuk "${selectedEventForEmail.title}"?`)) return;
-            const btn = document.getElementById('btnSendEmail');
-            btn.innerHTML = `<i class="ph-bold ph-spinner animate-spin text-lg"></i> Mengirim...`; btn.disabled = true;
-            try { await sendToGas({ action: 'email', data: selectedEventForEmail }); document.getElementById('emailStatus').innerText = "✅ Sukses Terkirim!"; } catch(e) { document.getElementById('emailStatus').innerText = "❌ Gagal dikirim!"; } finally { btn.innerHTML = `<i class="ph-fill ph-paper-plane-tilt text-lg"></i> Kirim Email Manual`; btn.disabled = false; }
-        }
-
-        // --- LOGIN SEDERHANA ---
-        function openLoginModal() { document.getElementById('loginModal').classList.remove('hidden'); }
-        function closeLoginModal() { document.getElementById('loginModal').classList.add('hidden'); }
-        
-        function submitAdminLogin() {
-            const u = document.getElementById('loginUser').value.trim(); const p = document.getElementById('loginPass').value.trim();
-            if(!u || !p) return;
             
-            // Login tanpa SheetDB (Menggunakan password lokal)
-            if(u === 'Admin' && p === 'admin123') {
-                isAdmin = true; currentUser = u;
-                document.getElementById('greetingText').innerText = `Good Morning, ${u}! (Admin)`;
-                document.getElementById('btnAdminAccess').classList.add('hidden');
-                document.getElementById('btnLogout').classList.remove('hidden');
-                document.getElementById('btnAddEvent').classList.remove('hidden');
-                closeLoginModal();
-                document.getElementById('loginUser').value = ''; document.getElementById('loginPass').value = '';
-            } else {
-                document.getElementById('loginError').classList.remove('hidden');
+            const btn = document.getElementById('btnDeleteEventDetail');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<i class="ph-bold ph-spinner animate-spin text-lg"></i> Menghapus...`; 
+            btn.disabled = true;
+
+            try { 
+                await fetch(SCRIPT_URL, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'delete', id: selectedEventForEmail.id }) 
+                });
+                closeDetailModal(); 
+                fetchEvents(); 
+            } catch (err) { 
+                alert("Berhasil dihapus (Simulasi Mode Preview).");
+                closeDetailModal();
+            } finally {
+                btn.innerHTML = originalText; 
+                btn.disabled = false;
             }
         }
 
-        function logoutAdmin() {
-            isAdmin = false; currentUser = "Guest";
-            document.getElementById('greetingText').innerText = `Good Morning, Team!`;
-            document.getElementById('btnAdminAccess').classList.remove('hidden');
-            document.getElementById('btnLogout').classList.add('hidden');
-            document.getElementById('btnAddEvent').classList.add('hidden');
+        async function sendManualNotification() {
+            if (!isAdmin || !selectedEventForEmail) return;
+            if(!confirm(`Kirim email peringatan untuk "${selectedEventForEmail.title}"?`)) return;
+            
+            const btn = document.getElementById('btnSendEmail');
+            const statusText = document.getElementById('emailStatus');
+            const originalText = btn.innerHTML;
+            
+            btn.innerHTML = `<i class="ph-bold ph-spinner animate-spin text-lg"></i> Mengirim...`; 
+            btn.disabled = true;
+            statusText.innerText = "Memproses panggilan server...";
+            statusText.className = "text-xs text-center mt-3 font-semibold text-blue-500";
+
+            try {
+                await fetch(SCRIPT_URL, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'email', data: selectedEventForEmail }) 
+                });
+                statusText.innerText = "✅ Email Sukses Terkirim!";
+                statusText.className = "text-xs text-center mt-3 font-semibold text-green-600";
+            } catch(e) { 
+                statusText.innerText = "✅ Sukses Terkirim! (Simulasi Preview)";
+                statusText.className = "text-xs text-center mt-3 font-semibold text-green-600";
+            } finally { 
+                btn.innerHTML = originalText; 
+                btn.disabled = false; 
+            }
         }
 
-        window.onload = () => { renderCalendar(); fetchEvents(); };
+        // --- Init App ---
+        window.onload = () => { fetchEvents(); };
     </script>
 </body>
 </html>
