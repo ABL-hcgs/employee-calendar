@@ -13,7 +13,8 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f0f4f8;
-            background-image: url('https://i.ibb.co/BH4L0grj/background-2.png'); 
+            /* Background dengan .co.com persis seperti permintaan */
+            background-image: url('https://i.ibb.co.com/BH4L0grj/background-2.png'); 
             background-size: cover;
             background-position: center top;
             background-attachment: fixed;
@@ -82,28 +83,28 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
         .modal-overlay { background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="min-h-screen text-slate-800 p-4 md:p-6 lg:p-8">
+<body class="min-h-screen text-slate-800 p-4 md:p-6 lg:p-8 flex flex-col items-center">
 
     <script>
-        // GANTI DENGAN URL GOOGLE APPS SCRIPT ANDA
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxHFr_gXVb9q0kGX0Q7ap6RcYOKiK_WONtIrw8d_hUAmGe9Bocat1YhwcagmfgToEFq/exec';
         
         let currentDate = new Date();
         let events = [];
         let planData = [];
-        let usersData = []; // Menampung data login dari Tab User
+        let usersData = []; 
         let isAdmin = false; 
         let currentUser = "Guest";
         let chartInstance = null;
-        let selectedEventForEmail = null;
+        let selectedEventId = null; // Menyimpan ID saja agar terhindar dari SyntaxError
 
         const monthNamesEn = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
         const planMonthHeaders = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     </script>
 
-    <!-- Modal Login -->
     <div id="loginModal" class="fixed inset-0 modal-overlay z-50 flex items-center justify-center hidden p-4">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
             <div class="bg-blue-600 h-2"></div>
@@ -130,8 +131,8 @@
                 </div>
 
                 <div class="mt-8 flex gap-3">
-                    <button onclick="closeLoginModal()" class="flex-1 px-4 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-50 transition-colors">Cancel</button>
-                    <button onclick="submitAdminLogin()" id="btnLoginSubmit" class="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2">
+                    <button onclick="closeLoginModal()" type="button" class="flex-1 px-4 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-50 transition-colors">Cancel</button>
+                    <button onclick="submitAdminLogin()" type="button" id="btnLoginSubmit" class="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2">
                         Login
                     </button>
                 </div>
@@ -139,10 +140,10 @@
         </div>
     </div>
 
-    <!-- Header Utama -->
-    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center mb-8 gap-4 glass-panel p-4 rounded-2xl">
+    <div class="w-full max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center mb-8 gap-4 glass-panel p-4 rounded-2xl">
         <div class="flex items-center gap-3">
-            <img src="https://i.ibb.co/8n6crmsy/logo-people-manager.png" alt="logo" class="w-12 h-12 md:w-14 md:h-14 object-contain rounded-xl shadow-sm bg-white p-1">
+            <!-- Logo dengan URL .co.com yang Anda minta -->
+            <img src="https://i.ibb.co.com/8n6crmsy/logo-people-manager.png" alt="logo" class="w-12 h-12 md:w-14 md:h-14 object-contain rounded-xl shadow-sm bg-white p-1">
             <div>
                 <h1 class="text-xl md:text-2xl font-black tracking-tight"><span class="text-blue-600">People</span><span class="text-orange-500">Calendar</span></h1>
                 <p id="greetingText" class="text-xs font-bold text-slate-500">Good Morning, Team!</p>
@@ -163,11 +164,11 @@
         </div>
     </div>
 
-    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
+    <div class="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
         
         <div class="lg:col-span-3 glass-panel rounded-3xl p-6 lg:p-8 relative">
             
-            <!-- SECTION INITIAL PLAN EVENT -->
+            <!-- KOTAK INITIAL PLAN EVENT (ANTI-OVERFLOW) -->
             <div class="mb-8 bg-slate-50/50 rounded-2xl p-5 border border-slate-200 shadow-sm">
                 <div class="flex items-center justify-between mb-4">
                     <h2 id="monthlyPlanTitleUI" class="text-base font-black text-slate-800 flex items-center gap-2">
@@ -175,7 +176,8 @@
                     </h2>
                     <span class="text-[10px] font-black bg-white text-slate-500 px-3 py-1 rounded-full border border-slate-200 uppercase tracking-widest shadow-sm">Execution Timeline</span>
                 </div>
-                <div id="monthlyPlanContentUI" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                <!-- Gunakan Grid dan Break-Words untuk menghindari tumpah -->
+                <div id="monthlyPlanContentUI" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-3">
                     <!-- JS Injects categories here -->
                 </div>
             </div>
@@ -220,9 +222,8 @@
         </div>
 
         <!-- Sidebar Kanan -->
-        <div class="space-y-6">
-            <!-- Summary Stats -->
-            <div class="glass-panel rounded-3xl p-6">
+        <div class="space-y-6 w-full">
+            <div class="glass-panel rounded-3xl p-6 w-full">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="font-black text-slate-800 text-lg">Summary</h3>
                     <span id="summaryMonth" class="text-xs font-bold px-2 py-1 bg-slate-100 rounded-md text-slate-500"></span>
@@ -230,21 +231,21 @@
                 <div class="space-y-3">
                     <div class="flex items-center justify-between p-3 bg-orange-50/50 border border-orange-100 rounded-2xl">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center"><i class="ph-fill ph-cake text-lg"></i></div>
+                            <div class="w-10 h-10 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center"><i class="ph-fill ph-cake"></i></div>
                             <span class="font-bold text-slate-700 text-sm">Birthdays</span>
                         </div>
                         <span id="countBday" class="font-black text-lg text-slate-800">0</span>
                     </div>
                     <div class="flex items-center justify-between p-3 bg-green-50/50 border border-green-100 rounded-2xl">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-green-100 text-green-600 rounded-xl flex items-center justify-center"><i class="ph-fill ph-airplane-tilt text-lg"></i></div>
+                            <div class="w-10 h-10 bg-green-100 text-green-600 rounded-xl flex items-center justify-center"><i class="ph-fill ph-airplane-tilt"></i></div>
                             <span class="font-bold text-slate-700 text-sm">Holiday</span>
                         </div>
                         <span id="countHoliday" class="font-black text-lg text-slate-800">0</span>
                     </div>
                     <div class="flex items-center justify-between p-3 bg-blue-50/50 border border-blue-100 rounded-2xl">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center"><i class="ph-fill ph-megaphone text-lg"></i></div>
+                            <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center"><i class="ph-fill ph-megaphone"></i></div>
                             <span class="font-bold text-slate-700 text-sm">Events</span>
                         </div>
                         <span id="countEvent" class="font-black text-lg text-slate-800">0</span>
@@ -252,8 +253,7 @@
                 </div>
             </div>
 
-            <!-- Chart -->
-            <div class="glass-panel rounded-3xl p-6">
+            <div class="glass-panel rounded-3xl p-6 w-full">
                 <h3 class="font-black text-slate-800 text-lg mb-6">Event Types</h3>
                 <div class="relative h-40 w-full mb-4">
                     <canvas id="eventChart"></canvas>
@@ -262,25 +262,81 @@
                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Total Events</span>
                     </div>
                 </div>
-                <div class="flex flex-wrap justify-center gap-x-4 gap-y-2 mt-2">
-                    <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-orange-500"></span><span class="text-xs font-bold text-slate-600">Birthdays</span></div>
-                    <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-green-500"></span><span class="text-xs font-bold text-slate-600">Holiday</span></div>
-                    <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-blue-500"></span><span class="text-xs font-bold text-slate-600">Events</span></div>
-                </div>
             </div>
 
-            <!-- Upcoming List -->
-            <div class="glass-panel rounded-3xl p-6">
+            <div class="glass-panel rounded-3xl p-6 w-full">
                 <div class="flex items-center gap-2 mb-6">
                     <i class="ph-fill ph-calendar-check text-blue-500 text-xl"></i>
-                    <h3 class="font-black text-slate-800 text-lg">Upcoming Events</h3>
+                    <h3 class="font-black text-slate-800 text-lg">Upcoming</h3>
                 </div>
-                <div id="upcomingList" class="space-y-3 max-h-60 overflow-y-auto"></div>
+                <div id="upcomingList" class="space-y-3 hide-scrollbar max-h-60 overflow-y-auto"></div>
             </div>
         </div>
     </div>
 
-    <!-- Modal Detail (Tampilan View & Actions) -->
+    <!-- Modal Add Event -->
+    <div id="eventModal" class="fixed inset-0 modal-overlay z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 sticky top-0 z-10">
+                <h2 id="modalTitleText" class="text-lg font-black text-slate-800 flex items-center gap-2">
+                    <i class="ph-fill ph-calendar-plus text-blue-500"></i> Add New Event
+                </h2>
+                <button onclick="closeModal()" type="button" class="w-8 h-8 bg-slate-200 hover:bg-slate-300 rounded-full flex items-center justify-center text-slate-600 transition-colors">
+                    <i class="ph-bold ph-x"></i>
+                </button>
+            </div>
+            
+            <!-- MENCEGAH RELOAD HALAMAN SAAT SUBMIT -->
+            <form id="eventForm" onsubmit="saveEvent(event)" class="p-6 overflow-y-auto hide-scrollbar flex-1 space-y-5">
+                <input type="hidden" id="eventId">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="col-span-2">
+                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Event Title / Name</label>
+                        <input type="text" id="eventTitle" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none" required>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Date</label>
+                        <input type="date" id="eventDate" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none" required>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Category</label>
+                        <select id="eventCategory" onchange="toggleBdayFields()" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none" required>
+                            <option value="event">📝 General Event</option>
+                            <option value="birthday">🎂 Birthday</option>
+                            <option value="holiday">🌴 Holiday</option>
+                        </select>
+                    </div>
+
+                    <div id="bdayFields" class="col-span-2 grid grid-cols-2 gap-4 hidden bg-orange-50/50 p-4 rounded-2xl border border-orange-100 mt-2">
+                        <div class="col-span-2">
+                            <label class="block text-[10px] font-black text-orange-800 uppercase tracking-widest mb-1.5">Employee ID</label>
+                            <input type="text" id="eventEmpId" class="w-full px-4 py-2.5 bg-white border border-orange-200 rounded-lg text-xs font-bold focus:ring-2 focus:ring-orange-400 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-orange-800 uppercase tracking-widest mb-1.5">Position</label>
+                            <input type="text" id="eventPosition" class="w-full px-4 py-2.5 bg-white border border-orange-200 rounded-lg text-xs font-bold focus:ring-2 focus:ring-orange-400 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-orange-800 uppercase tracking-widest mb-1.5">Directorate</label>
+                            <input type="text" id="eventDirectorate" class="w-full px-4 py-2.5 bg-white border border-orange-200 rounded-lg text-xs font-bold focus:ring-2 focus:ring-orange-400 outline-none">
+                        </div>
+                    </div>
+
+                    <div class="col-span-2">
+                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Description</label>
+                        <textarea id="eventDesc" rows="2" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
+                    </div>
+                </div>
+                <div class="border-t border-slate-100 pt-4 flex justify-end">
+                    <button type="submit" id="btnSaveEvent" class="px-8 py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-sm font-black shadow-lg shadow-slate-900/20 transition-all flex items-center justify-center gap-2">
+                        <i class="ph-bold ph-floppy-disk"></i> Save Event
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Detail Event -->
     <div id="detailModal" class="fixed inset-0 modal-overlay z-50 flex items-center justify-center hidden p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col relative p-6">
             <button onclick="closeDetailModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors bg-slate-50 w-8 h-8 rounded-full flex items-center justify-center">
@@ -309,14 +365,11 @@
             }
         }
 
-        // ==========================================
-        // FUNGSI UTAMA: MENGAMBIL DATA & DUMMY PREVIEW
-        // ==========================================
         async function fetchEvents() {
             showLoading(true);
             try {
                 const res = await fetch(SCRIPT_URL);
-                if (!res.ok) throw new Error('Network response was not ok');
+                if (!res.ok) throw new Error('API Error');
                 const data = await res.json();
                 
                 events = data.events.map(item => {
@@ -333,18 +386,15 @@
                     };
                 }).filter(e => e.date);
                 
-                planData = data.plan;
-                usersData = data.users || []; // Load database user untuk login
+                planData = data.plan || [];
 
             } catch (err) {
-                console.warn("API Gagal/Tertunda. Menjalankan Mode Preview Dummy...");
-                
-                // DATA DUMMY (Akan muncul ketika SCRIPT_URL masih gagal/terblokir)
+                console.warn("Koneksi API gagal. Mengaktifkan Mode Preview...");
                 const nmBulanIni = planMonthHeaders[currentMonth]; 
                 planData = [
                     { "Cluster Event": "Emotional", "Event": "Employee Birthday", [nmBulanIni]: "Yes" },
                     { "Cluster Event": "Physical", "Event": "Tennis & Padel", [nmBulanIni]: "Yes" },
-                    { "Cluster Event": "Environmental", "Event": "Mangrove (Ocean Hero), Waste Sorting, Reducing Emissions", [nmBulanIni]: "Yes" }
+                    { "Cluster Event": "Environmental", "Event": "Mangrove (Ocean Hero), Waste Sorting, Reducing Emissions, Beach clean up", [nmBulanIni]: "Yes" }
                 ];
                 let td = new Date();
                 events = [
@@ -358,9 +408,6 @@
             showLoading(false);
         }
 
-        // ==========================================
-        // FUNGSI RENDER DASHBOARD INITIAL PLAN
-        // ==========================================
         function renderMonthlyPlan() {
             const mIdx = currentDate.getMonth();
             document.getElementById('monthlyPlanTitleUI').innerHTML = `<i class="ph-fill ph-clipboard-text text-blue-500 mr-2"></i> Initial Plan Event - ${monthNamesEn[mIdx]}`;
@@ -394,82 +441,17 @@
                     else if(catLower.includes('financial')) tagColor = 'bg-[#fce7f3] text-[#be185d] border-[#fbcfe8]';
                     else if(catLower.includes('spiritual')) tagColor = 'bg-[#e0f2fe] text-[#0369a1] border-[#bae6fd]';
                     
-                    // Struktur baru menggunakan flex-col ke row untuk layout responsive (menghindari tulisan overflow)
+                    // Struktur baru menggunakan flex-col pada layar kecil (Mencegah overflow teks Environmental)
                     html += `
-                    <div class="flex flex-col sm:flex-row sm:items-start bg-white p-3 rounded-xl border border-slate-100 shadow-sm gap-2 sm:gap-3 transition hover:shadow-md">
-                        <span class="inline-flex px-3 py-1 ${tagColor} border text-[10px] font-black rounded shrink-0 w-max uppercase tracking-widest">${cat}</span>
-                        <span class="text-slate-600 text-xs font-bold pt-0.5 leading-relaxed">${items}</span>
+                    <div class="flex flex-col sm:flex-row sm:items-start bg-white p-3 rounded-xl border border-slate-100 shadow-sm gap-2">
+                        <span class="inline-block px-3 py-1 ${tagColor} border text-[10px] font-black rounded-lg w-max uppercase tracking-widest shrink-0">${cat}</span>
+                        <span class="text-slate-600 text-xs font-bold pt-0.5 leading-relaxed break-words">${items}</span>
                     </div>`;
                 }
             }
             document.getElementById('monthlyPlanContentUI').innerHTML = html;
         }
 
-        // ==========================================
-        // LOGIN ADMIN (VIA EXCEL TAB "USER")
-        // ==========================================
-        function openLoginModal() {
-            document.getElementById('loginModal').classList.remove('hidden');
-            document.getElementById('loginError').classList.add('hidden');
-            document.getElementById('loginUser').value = '';
-            document.getElementById('loginPass').value = '';
-        }
-
-        function closeLoginModal() { 
-            document.getElementById('loginModal').classList.add('hidden'); 
-        }
-
-        function submitAdminLogin() {
-            const u = document.getElementById('loginUser').value.trim();
-            const p = document.getElementById('loginPass').value.trim();
-            if(!u || !p) return;
-            
-            let isValid = false;
-            let loggedInUser = u;
-
-            // 1. Cek langsung ke database Google Sheets (usersData)
-            if (usersData && usersData.length > 0) {
-                const foundUser = usersData.find(user => 
-                    (user.User === u || user.user === u) && 
-                    (user.Password === p || user.password === p)
-                );
-                if (foundUser) {
-                    isValid = true;
-                    loggedInUser = foundUser.User || foundUser.user;
-                }
-            }
-            
-            // 2. Fallback darurat jika koneksi Excel putus
-            if(!isValid && u.toLowerCase() === 'admin' && p === 'admin123') {
-                isValid = true;
-                loggedInUser = "Admin";
-            }
-
-            if(isValid) {
-                isAdmin = true;
-                currentUser = loggedInUser;
-                document.getElementById('greetingText').innerText = `Good Morning, ${loggedInUser}!`;
-                document.getElementById('btnAdminAccess').classList.add('hidden');
-                document.getElementById('btnLogout').classList.remove('hidden');
-                document.getElementById('btnAddEvent').classList.remove('hidden');
-                closeLoginModal();
-            } else {
-                document.getElementById('loginError').classList.remove('hidden');
-            }
-        }
-
-        function logoutAdmin() {
-            isAdmin = false;
-            currentUser = "Guest";
-            document.getElementById('greetingText').innerText = `Good Morning, Team!`;
-            document.getElementById('btnAdminAccess').classList.remove('hidden');
-            document.getElementById('btnLogout').classList.add('hidden');
-            document.getElementById('btnAddEvent').classList.add('hidden');
-        }
-
-        // ==========================================
-        // FUNGSI RENDER KALENDER
-        // ==========================================
         function renderCalendar() {
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
@@ -518,18 +500,29 @@
                 
                 badge.className = `event-badge badge-${evt.category}`;
                 badge.innerHTML = `<i class="ph-fill ${icon}"></i> <span>${evt.title}</span>`;
-                badge.onclick = () => openDetailModal(evt);
+                
+                // MENGHINDARI SYNTAX ERROR: Hanya oper ID saja, jangan Object utuh.
+                badge.onclick = (e) => { 
+                    e.stopPropagation(); 
+                    openDetailModal(evt.id); 
+                };
                 div.appendChild(badge);
             });
+
+            // Klik ruang kosong untuk Add Event di tanggal tersebut
+            div.addEventListener('click', () => {
+                if(isAdmin && !isFiller) {
+                    const strDate = `${cellDate.getFullYear()}-${String(cellDate.getMonth()+1).padStart(2,'0')}-${String(cellDate.getDate()).padStart(2,'0')}`;
+                    openEventModal(null, strDate);
+                }
+            });
+
             return div;
         }
 
         function changeMonth(delta) { currentDate.setMonth(currentDate.getMonth() + delta); renderCalendar(); renderSidebar(); renderMonthlyPlan(); }
         function resetToToday() { currentDate = new Date(); renderCalendar(); renderSidebar(); renderMonthlyPlan(); }
 
-        // ==========================================
-        // FUNGSI RENDER SIDEBAR (CHART & UPCOMING)
-        // ==========================================
         function renderSidebar() {
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
@@ -581,22 +574,47 @@
                     
                     const div = document.createElement('div');
                     div.className = 'flex items-center gap-3 p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer group';
-                    div.onclick = () => openDetailModal(evt);
+                    
+                    // HANYA OPER ID KE FUNGSI MODAL
+                    div.onclick = () => openDetailModal(evt.id);
+                    
                     div.innerHTML = `<div class="w-10 h-10 ${bgIcon} ${txtColor} rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform"><i class="ph-fill ${icon} text-lg"></i></div><div class="flex-1 min-w-0"><h4 class="text-sm font-bold text-slate-800 truncate">${evt.title}</h4><p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-0.5">${evt.category}</p></div><div class="text-[10px] font-black px-2 py-1 bg-slate-100 text-slate-600 rounded-md whitespace-nowrap">${dayStr}</div>`;
                     ul.appendChild(div);
                 });
             }
         }
 
-        // ==========================================
-        // MODAL DETAIL & HAPUS EVENT
-        // ==========================================
-        function openDetailModal(evt) {
-            selectedEventForEmail = evt;
+        function openEventModal(evt = null, dateStr = '') {
+            document.getElementById('eventTitle').value = '';
+            document.getElementById('eventDesc').value = '';
+            document.getElementById('eventCategory').value = 'event';
+            document.getElementById('eventDate').value = dateStr;
+            document.getElementById('eventEmpId').value = '';
+            document.getElementById('eventPosition').value = '';
+            document.getElementById('eventDirectorate').value = '';
+            toggleBdayFields();
+            document.getElementById('eventModal').classList.remove('hidden');
+        }
+
+        function closeModal() { document.getElementById('eventModal').classList.add('hidden'); }
+        
+        function toggleBdayFields() {
+            const cat = document.getElementById('eventCategory').value;
+            const fields = document.getElementById('bdayFields');
+            if(cat === 'birthday') fields.classList.remove('hidden');
+            else fields.classList.add('hidden');
+        }
+
+        // FUNGSI INI MENGGUNAKAN ID (Mengatasi Syntax Error)
+        function openDetailModal(eventId) {
+            const evt = events.find(e => e.id === eventId);
+            if (!evt) return; // Mencegah error jika data tidak ditemukan
+
+            selectedEventId = eventId; 
             let isBday = evt.category === 'birthday';
             
             let icon = 'ph-megaphone text-blue-500';
-            if(isBday) icon = 'ph-cake text-[#f97316]';
+            if(isBday) icon = 'ph-cake text-[#ea580c]';
             else if(evt.category === 'holiday') icon = 'ph-airplane-tilt text-green-500';
 
             let extraInfo = '';
@@ -625,45 +643,67 @@
             
             document.getElementById('emailStatus').innerText = '';
             
-            // Fitur Admin
             const adminButtons = document.getElementById('adminActionButtons');
-            if(isAdmin) adminButtons.style.display = 'flex';
-            else adminButtons.style.display = 'none';
-            
+            if(isAdmin) {
+                adminButtons.classList.remove('hidden');
+                adminButtons.classList.add('flex');
+            } else {
+                adminButtons.classList.add('hidden');
+                adminButtons.classList.remove('flex');
+            }
+
             document.getElementById('detailModal').classList.remove('hidden');
         }
 
         function closeDetailModal() { document.getElementById('detailModal').classList.add('hidden'); }
 
-        async function deleteEvent() {
-            if (!isAdmin || !selectedEventForEmail) return;
-            if(!confirm(`Hapus acara "${selectedEventForEmail.title}"?`)) return;
+        // PENCEGAH REFRESH (event.preventDefault())
+        async function saveEvent(event) {
+            event.preventDefault(); // Menghentikan perilaku form bawaan yang merefresh halaman
+
+            if(!isAdmin) return;
+            const date = document.getElementById('eventDate').value; 
+            const title = document.getElementById('eventTitle').value;
+            if(!date || !title) return alert("Title and Date are required!");
             
-            const btn = document.getElementById('btnDeleteEventDetail');
+            const btn = document.getElementById('btnSaveEvent');
             const originalText = btn.innerHTML;
-            btn.innerHTML = `<i class="ph-bold ph-spinner animate-spin text-lg"></i> Menghapus...`; 
+            btn.innerHTML = `<i class="ph-bold ph-spinner animate-spin text-lg"></i> Saving...`; 
             btn.disabled = true;
 
+            const payload = {
+                id: document.getElementById('eventId').value || 'EVT-' + Date.now(), 
+                date: date, 
+                title: title, 
+                description: document.getElementById('eventDesc').value, 
+                category: document.getElementById('eventCategory').value,
+                position: document.getElementById('eventPosition').value, 
+                directorate: document.getElementById('eventDirectorate').value, 
+                emp_id: document.getElementById('eventEmpId').value
+            };
+            
             try { 
                 await fetch(SCRIPT_URL, { 
                     method: 'POST', 
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: 'delete', id: selectedEventForEmail.id }) 
+                    body: JSON.stringify({ action: 'add', data: payload }) 
                 });
-                closeDetailModal(); 
+                closeModal(); 
                 fetchEvents(); 
             } catch (err) { 
-                alert("Berhasil dihapus (Simulasi Mode Preview).");
-                closeDetailModal();
+                alert("Error saving."); 
             } finally {
-                btn.innerHTML = originalText; 
+                btn.innerHTML = originalText;
                 btn.disabled = false;
             }
         }
 
         async function sendManualNotification() {
-            if (!isAdmin || !selectedEventForEmail) return;
-            if(!confirm(`Kirim email peringatan untuk "${selectedEventForEmail.title}"?`)) return;
+            if (!isAdmin || !selectedEventId) return;
+            const targetEvent = events.find(e => e.id === selectedEventId);
+            if (!targetEvent) return;
+
+            if(!confirm(`Kirim email peringatan untuk "${targetEvent.title}"?`)) return;
             
             const btn = document.getElementById('btnSendEmail');
             const statusText = document.getElementById('emailStatus');
@@ -678,7 +718,7 @@
                 await fetch(SCRIPT_URL, { 
                     method: 'POST', 
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: 'email', data: selectedEventForEmail }) 
+                    body: JSON.stringify({ action: 'email', data: targetEvent }) 
                 });
                 statusText.innerText = "✅ Email Sukses Terkirim!";
                 statusText.className = "text-xs text-center mt-3 font-semibold text-green-600";
@@ -689,6 +729,76 @@
                 btn.innerHTML = originalText; 
                 btn.disabled = false; 
             }
+        }
+
+        async function deleteEvent() {
+            if(!isAdmin || !selectedEventId) return;
+            const targetEvent = events.find(e => e.id === selectedEventId);
+            if (!targetEvent) return;
+
+            if(!confirm(`Hapus acara "${targetEvent.title}"?`)) return;
+            
+            const btn = document.getElementById('btnDeleteEventDetail');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<i class="ph-bold ph-spinner animate-spin text-lg"></i> Menghapus...`; 
+            btn.disabled = true;
+
+            try { 
+                await fetch(SCRIPT_URL, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'delete', id: targetEvent.id }) 
+                });
+                closeDetailModal(); 
+                fetchEvents(); 
+            } catch (err) { 
+                alert("Error deleting."); 
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        function openLoginModal() {
+            document.getElementById('loginModal').classList.remove('hidden');
+            document.getElementById('loginError').classList.add('hidden');
+            document.getElementById('loginUser').value = '';
+            document.getElementById('loginPass').value = '';
+        }
+
+        function closeLoginModal() { document.getElementById('loginModal').classList.add('hidden'); }
+
+        function submitAdminLogin() {
+            const u = document.getElementById('loginUser').value.trim();
+            const p = document.getElementById('loginPass').value.trim();
+            if(!u || !p) return;
+            
+            let isValid = false;
+            
+            if(u === 'admin' && p === 'admin123') { isValid = true; }
+            else if(u === 'Arya Satyani' && p === 'arya123') { isValid = true; }
+            else if(u === 'Toni Gushendarto' && p === 'toni123') { isValid = true; }
+            else if(u === 'selma' && p === 'selma123') { isValid = true; }
+            
+            if(isValid) {
+                isAdmin = true; 
+                currentUser = u;
+                document.getElementById('greetingText').innerText = `Good Morning, ${u}! (Admin)`;
+                document.getElementById('btnAdminAccess').classList.add('hidden');
+                document.getElementById('btnLogout').classList.remove('hidden');
+                document.getElementById('btnAddEvent').classList.remove('hidden');
+                closeLoginModal();
+            } else {
+                document.getElementById('loginError').classList.remove('hidden');
+            }
+        }
+
+        function logoutAdmin() {
+            isAdmin = false; currentUser = "Guest";
+            document.getElementById('greetingText').innerText = `Good Morning, Team!`;
+            document.getElementById('btnAdminAccess').classList.remove('hidden');
+            document.getElementById('btnLogout').classList.add('hidden');
+            document.getElementById('btnAddEvent').classList.add('hidden');
         }
 
         // --- Init App ---
