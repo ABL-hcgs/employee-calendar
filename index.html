@@ -372,10 +372,17 @@
                 if (!res.ok) throw new Error('API Error');
                 const data = await res.json();
                 
-                events = data.events.map(item => {
+                events = data.events.map((item, index) => {
                     let cat = (item.category || item.Category || 'event').toLowerCase();
+                    
+                    // FIX: Beri ID otomatis jika di Google Sheet kolom ID kosong agar tidak tertukar
+                    let eventId = item.id || item.ID;
+                    if (!eventId || eventId === "") {
+                        eventId = "TEMP-ID-" + index;
+                    }
+
                     return {
-                        id: item.id || item.ID, 
+                        id: eventId, 
                         date: item.date || item.Date, 
                         title: item.title || item.Title || 'Untitled',
                         description: item.description || item.Description || '', 
@@ -617,6 +624,10 @@
             if(isBday) icon = 'ph-cake text-[#ea580c]';
             else if(evt.category === 'holiday') icon = 'ph-airplane-tilt text-green-500';
 
+            // FIX: Merapikan format tanggal agar tidak ada tulisan T17:00:00.000Z
+            let dateObj = new Date(evt.date);
+            let formattedDate = isNaN(dateObj) ? evt.date : dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+
             let extraInfo = '';
             if(isBday) {
                 extraInfo = `
@@ -635,7 +646,7 @@
                 <span class="inline-block px-4 py-1 bg-slate-100 border border-slate-200 text-slate-600 text-[10px] font-black rounded-full mb-5 uppercase tracking-widest shadow-sm">${badgeCat}</span>
                 
                 <div class="text-left space-y-1 bg-slate-50 p-4 rounded-xl border border-slate-100">
-                    <p><span class="font-extrabold text-slate-800">Date:</span> ${evt.date}</p>
+                    <p><span class="font-extrabold text-slate-800">Date:</span> ${formattedDate}</p>
                     <p><span class="font-extrabold text-slate-800">Desc:</span> ${evt.description || '-'}</p>
                 </div>
                 ${extraInfo}
