@@ -12,7 +12,6 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f0f4f8;
             background-image: url('https://i.ibb.co.com/BH4L0grj/background-2.png'); 
             background-size: cover;
             background-position: center top;
@@ -75,9 +74,13 @@
             transition: transform 0.1s;
         }
         .event-badge:hover { transform: scale(1.02); }
+        
+        /* WARNA BADGE KATEGORI EVENT */
         .badge-birthday { background-color: #fff7ed; color: #ea580c; border: 1px solid #ffedd5; }
         .badge-holiday { background-color: #f0fdf4; color: #15803d; border: 1px solid #dcfce7; }
         .badge-event { background-color: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe; }
+        .badge-special_event { background-color: #fef08a; color: #854d0e; border: 1px solid #fef9c3; }
+        .badge-physical_activity { background-color: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
         
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
@@ -89,7 +92,7 @@
 <body class="min-h-screen text-slate-800 p-4 md:p-6 lg:p-8 flex flex-col items-center">
 
     <script>
-        // MASUKKAN URL ANDA DI SINI
+        // MASUKKAN URL GOOGLE SCRIPT ANDA DI SINI
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxHFr_gXVb9q0kGX0Q7ap6RcYOKiK_WONtIrw8d_hUAmGe9Bocat1YhwcagmfgToEFq/exec';
         
         let currentDate = new Date();
@@ -101,6 +104,7 @@
         const planMonthHeaders = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     </script>
 
+    <!-- Modal Login -->
     <div id="loginModal" class="fixed inset-0 modal-overlay z-50 flex items-center justify-center hidden p-4">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
             <div class="bg-blue-600 h-2"></div>
@@ -136,6 +140,7 @@
         </div>
     </div>
 
+    <!-- Header UI -->
     <div class="w-full max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center mb-8 gap-4 glass-panel p-4 rounded-2xl">
         <div class="flex items-center gap-3">
             <img src="https://i.ibb.co.com/8n6crmsy/logo-people-manager.png" alt="logo" class="w-12 h-12 md:w-14 md:h-14 object-contain rounded-xl shadow-sm bg-white p-1">
@@ -157,6 +162,7 @@
         </div>
     </div>
 
+    <!-- MAIN BODY -->
     <div class="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
         
         <!-- MAIN CALENDAR AREA -->
@@ -209,6 +215,7 @@
             </div>
         </div>
 
+        <!-- SIDEBAR -->
         <div class="space-y-6 w-full">
             <div class="glass-panel rounded-3xl p-6 w-full">
                 <div class="flex justify-between items-center mb-6">
@@ -261,6 +268,7 @@
         </div>
     </div>
 
+    <!-- MODAL FORM (ADD EVENT) -->
     <div id="eventModal" class="fixed inset-0 modal-overlay z-50 flex items-center justify-center hidden p-4">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
             <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 sticky top-0 z-10">
@@ -275,24 +283,38 @@
             <form id="eventForm" onsubmit="saveEvent(event)" class="p-6 overflow-y-auto hide-scrollbar flex-1 space-y-5">
                 <input type="hidden" id="eventId">
                 <div class="grid grid-cols-2 gap-4">
+                    
                     <div class="col-span-2">
                         <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Event Title / Name</label>
                         <input type="text" id="eventTitle" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none" required>
                     </div>
+                    
                     <div>
                         <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Date</label>
                         <input type="date" id="eventDate" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none" required>
                     </div>
+                    
                     <div>
                         <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Category</label>
                         <select id="eventCategory" onchange="toggleBdayFields()" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none" required>
                             <option value="event">📝 General Event</option>
                             <option value="birthday">🎂 Birthday</option>
                             <option value="holiday">🌴 Holiday</option>
+                            <option value="special_event">🎉 Special Event</option>
+                            <option value="physical_activity">🏃‍♂️ Physical Activity</option>
                         </select>
                     </div>
 
+                    <!-- KOTAK KHUSUS BIRTHDAY -->
                     <div id="bdayFields" class="col-span-2 grid grid-cols-2 gap-4 hidden bg-orange-50/50 p-4 rounded-2xl border border-orange-100 mt-2">
+                        <!-- KOLOM BARU UNTUK EMAIL KARYAWAN -->
+                        <div class="col-span-2">
+                            <label class="block text-[10px] font-black text-orange-800 uppercase tracking-widest mb-1.5 flex items-center justify-between">
+                                Employee Email <span class="text-orange-500 text-[9px]">(For Happy Birthday Card)</span>
+                            </label>
+                            <input type="email" id="eventEmpEmail" placeholder="employee@company.com" class="w-full px-4 py-2.5 bg-white border border-orange-200 rounded-lg text-xs font-bold focus:ring-2 focus:ring-orange-400 outline-none">
+                        </div>
+                        
                         <div class="col-span-2">
                             <label class="block text-[10px] font-black text-orange-800 uppercase tracking-widest mb-1.5">Employee ID</label>
                             <input type="text" id="eventEmpId" class="w-full px-4 py-2.5 bg-white border border-orange-200 rounded-lg text-xs font-bold focus:ring-2 focus:ring-orange-400 outline-none">
@@ -312,9 +334,10 @@
                         <textarea id="eventDesc" rows="2" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
                     </div>
                     
+                    <!-- KOTAK NOTIFY (SUDAH KEMBALI) -->
                     <div class="col-span-2 bg-blue-50/50 p-4 rounded-2xl border border-blue-100 mt-2">
                         <label class="block text-[10px] font-black text-blue-800 uppercase tracking-widest mb-3 flex items-center gap-2">
-                            <i class="ph-fill ph-bell-ringing text-blue-500 text-lg"></i> Auto-Email Setup
+                            <i class="ph-fill ph-bell-ringing text-blue-500 text-lg"></i> Auto-Email Setup (For HR)
                         </label>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
@@ -351,6 +374,7 @@
         </div>
     </div>
 
+    <!-- MODAL DETAIL (VIEW & DELETE) -->
     <div id="detailModal" class="fixed inset-0 modal-overlay z-50 flex items-center justify-center hidden p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col relative p-6">
             <button onclick="closeDetailModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors bg-slate-50 w-8 h-8 rounded-full flex items-center justify-center">
@@ -370,6 +394,7 @@
         </div>
     </div>
 
+    <!-- JAVASCRIPT LOGIC -->
     <script>
         function showLoading(show, text = "Syncing...") {
             const el = document.getElementById('loadingOverlay');
@@ -411,7 +436,8 @@
                         notify_2: item.notify_2 || item.Notify_2 || '0',
                         position: item.position || item.Position || '', 
                         directorate: item.directorate || item.Directorate || '',
-                        emp_id: item.emp_id || item.Emp_id || item.Emp_ID || ''
+                        emp_id: item.emp_id || item.Emp_id || item.Emp_ID || '',
+                        emp_email: item.emp_email || item.Emp_email || ''
                     };
                 }).filter(e => e.dateObj);
                 
@@ -427,7 +453,7 @@
                 ];
                 let td = new Date(); td.setHours(0,0,0,0);
                 events = [
-                    { id: "EV1", title: "Herwinda Agfierasari", dateObj: td, dateStr: "2026-08-15", category: "birthday", emp_id: "25000026", position: "Strategic Comben Master Expert", directorate: "Human Resources & General Services" }
+                    { id: "EV1", title: "Herwinda Agfierasari", dateObj: td, dateStr: "2026-08-15", category: "birthday", emp_id: "25000026", position: "Strategic Comben Master Expert", directorate: "Human Resources & General Services", emp_email: "herwinda@company.com" }
                 ];
             }
             
@@ -473,7 +499,7 @@
                     html += `
                     <div class="flex flex-col sm:flex-row sm:items-start bg-white p-3 rounded-xl border border-slate-100 shadow-sm gap-2">
                         <span class="inline-block px-3 py-1 ${tagColor} border text-[10px] font-black rounded-lg w-max uppercase tracking-widest shrink-0">${cat}</span>
-                        <span class="text-slate-600 text-xs font-bold pt-0.5 leading-relaxed break-words">${items}</span>
+                        <span class="text-slate-600 text-xs font-bold pt-0.5 break-words">${items}</span>
                     </div>`;
                 }
             }
@@ -525,6 +551,8 @@
                 let icon = 'ph-megaphone';
                 if(evt.category === 'birthday') icon = 'ph-cake';
                 if(evt.category === 'holiday') icon = 'ph-airplane-tilt';
+                if(evt.category === 'special_event') icon = 'ph-star';
+                if(evt.category === 'physical_activity') icon = 'ph-sneaker';
                 
                 badge.className = `event-badge badge-${evt.category}`;
                 badge.innerHTML = `<i class="ph-fill ${icon}"></i> <span>${evt.title}</span>`;
@@ -596,6 +624,9 @@
                     let icon = 'ph-megaphone', txtColor = 'text-blue-600', bgIcon='bg-blue-100';
                     if(evt.category === 'birthday') { icon = 'ph-cake'; txtColor = 'text-orange-600'; bgIcon='bg-orange-100'; }
                     if(evt.category === 'holiday') { icon = 'ph-airplane-tilt'; txtColor = 'text-green-600'; bgIcon='bg-green-100'; }
+                    if(evt.category === 'special_event') { icon = 'ph-star'; txtColor = 'text-yellow-600'; bgIcon='bg-yellow-100'; }
+                    if(evt.category === 'physical_activity') { icon = 'ph-sneaker'; txtColor = 'text-indigo-600'; bgIcon='bg-indigo-100'; }
+
                     let dayStr = evt._diffDays === 0 ? 'Today' : evt._diffDays === 1 ? 'Tmrw' : `In ${evt._diffDays} days`;
                     
                     const div = document.createElement('div');
@@ -603,7 +634,7 @@
                     
                     div.onclick = () => openDetailModal(evt);
                     
-                    div.innerHTML = `<div class="w-10 h-10 ${bgIcon} ${txtColor} rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform"><i class="ph-fill ${icon} text-lg"></i></div><div class="flex-1 min-w-0"><h4 class="text-sm font-bold text-slate-800 truncate">${evt.title}</h4><p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-0.5">${evt.category}</p></div><div class="text-[10px] font-black px-2 py-1 bg-slate-100 text-slate-600 rounded-md whitespace-nowrap">${dayStr}</div>`;
+                    div.innerHTML = `<div class="w-10 h-10 ${bgIcon} ${txtColor} rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform"><i class="ph-fill ${icon} text-lg"></i></div><div class="flex-1 min-w-0"><h4 class="text-sm font-bold text-slate-800 truncate">${evt.title}</h4><p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-0.5">${evt.category.replace('_',' ')}</p></div><div class="text-[10px] font-black px-2 py-1 bg-slate-100 text-slate-600 rounded-md whitespace-nowrap">${dayStr}</div>`;
                     ul.appendChild(div);
                 });
             }
@@ -615,6 +646,7 @@
             document.getElementById('eventCategory').value = 'event';
             document.getElementById('eventDate').value = dateStr;
             document.getElementById('eventEmpId').value = '';
+            document.getElementById('eventEmpEmail').value = '';
             document.getElementById('eventPosition').value = '';
             document.getElementById('eventDirectorate').value = '';
             document.getElementById('eventNotify1').value = '0';
@@ -640,6 +672,8 @@
             let icon = 'ph-megaphone text-blue-500';
             if(isBday) icon = 'ph-cake text-[#ea580c]';
             else if(evt.category === 'holiday') icon = 'ph-airplane-tilt text-green-500';
+            else if(evt.category === 'special_event') icon = 'ph-star text-yellow-500';
+            else if(evt.category === 'physical_activity') icon = 'ph-sneaker text-indigo-500';
 
             // RAPIHKAN FORMAT TANGGAL DI MODAL (Tanggal Indonesia)
             let formattedDate = isNaN(evt.dateObj) ? evt.dateStr : evt.dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -648,13 +682,14 @@
             if(isBday) {
                 extraInfo = `
                 <div class="bg-[#fff7ed] border border-[#ffedd5] text-slate-700 rounded-xl p-4 mt-4 text-left space-y-1.5 shadow-sm">
+                    <p><span class="font-extrabold text-slate-800">Email:</span> ${evt.emp_email || '-'}</p>
                     <p><span class="font-extrabold text-slate-800">Emp ID:</span> ${evt.emp_id || '-'}</p>
                     <p><span class="font-extrabold text-slate-800">Position:</span> ${evt.position || '-'}</p>
                     <p><span class="font-extrabold text-slate-800">Dept:</span> ${evt.directorate || '-'}</p>
                 </div>`;
             }
 
-            let badgeCat = evt.category.charAt(0).toUpperCase() + evt.category.slice(1);
+            let badgeCat = evt.category.replace('_',' ').toUpperCase();
             
             document.getElementById('detailContent').innerHTML = `
                 <i class="ph-fill ${icon} text-[3.5rem] mb-3 drop-shadow-sm"></i>
@@ -705,7 +740,8 @@
                 notify_2: document.getElementById('eventNotify2').value,
                 position: document.getElementById('eventPosition').value, 
                 directorate: document.getElementById('eventDirectorate').value, 
-                emp_id: document.getElementById('eventEmpId').value
+                emp_id: document.getElementById('eventEmpId').value,
+                emp_email: document.getElementById('eventEmpEmail').value // Ambil data email
             };
             
             try { 
