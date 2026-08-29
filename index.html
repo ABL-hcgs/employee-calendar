@@ -512,13 +512,18 @@
                     
                     if (rawDate) {
                         try {
-                            if (typeof rawDate === 'string' && rawDate.includes('T')) {
-                                let parts = rawDate.split('T')[0].split('-');
+                            // Perbaikan Logika Zona Waktu (Timezone Fix untuk Indonesia/WIB)
+                            if (typeof rawDate === 'string' && rawDate.length === 10 && rawDate.includes('-')) {
+                                // Jika format dari HTML YYYY-MM-DD murni
+                                let parts = rawDate.split('-');
                                 dateObj = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
                             } else {
+                                // Jika dari Google Sheets (Contoh: "1985-08-14T17:00:00.000Z")
+                                // Browser akan otomatis menyesuaikan jamnya kembali ke +7 (WIB) yaitu 15 Agustus
                                 let d = new Date(rawDate);
                                 dateObj = new Date(d.getFullYear(), d.getMonth(), d.getDate());
                             }
+                            
                             if (!isNaN(dateObj.getTime())) {
                                 dateStrClean = `${dateObj.getFullYear()}-${String(dateObj.getMonth()+1).padStart(2,'0')}-${String(dateObj.getDate()).padStart(2,'0')}`;
                             }
