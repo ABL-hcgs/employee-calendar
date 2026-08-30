@@ -71,7 +71,7 @@
 
     <script>
         // MASUKKAN URL GOOGLE SCRIPT ANDA DI SINI
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxesub0itAmyCJubzPftV8DGl9A3gdChvpfSy72JWZX1jIueMdgjXnuqZxs6Yi3RXM4/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzbAPGaifzHfOLBmcCSlAGkdvXDcZonpNWKGaBemb_LWREpa4T0OGmMs6ryOmMcncRg/exec';
         
         let currentDate = new Date();
         let events = [], planData = [], usersData = []; 
@@ -275,21 +275,6 @@
     <!-- ========================================================= -->
     <div id="view-adminPanel" class="w-full max-w-7xl mx-auto hidden grid grid-cols-1 gap-8">
         
-        <!-- DATABASE DIRECT LINK -->
-        <div class="glass-panel rounded-3xl p-6 w-full border-t-4 border-t-green-500 flex flex-col sm:flex-row justify-between items-center gap-4 bg-gradient-to-r from-white to-green-50/50">
-            <div>
-                <h3 class="font-black text-slate-800 text-lg flex items-center gap-2 mb-1">
-                    <i class="ph-fill ph-file-xls text-green-500 text-xl"></i> Database Master (Google Sheet)
-                </h3>
-                <p class="text-xs font-semibold text-slate-500">Akses dan edit data kalender, email, template, serta log aktivitas secara manual.</p>
-            </div>
-            
-            <!-- PENTING: GANTI LINK DI BAWAH INI DENGAN LINK GOOGLE SHEET ANDA -->
-            <a href="https://docs.google.com/spreadsheets/" target="_blank" class="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-green-500/30 transition-all flex items-center justify-center gap-2 whitespace-nowrap">
-                Buka Google Sheet <i class="ph-bold ph-arrow-up-right"></i>
-            </a>
-        </div>
-
         <!-- USER MANAGEMENT -->
         <div class="glass-panel rounded-3xl p-6 w-full border-t-4 border-t-blue-600 flex flex-col h-full">
             <h3 class="font-black text-slate-800 text-lg mb-2 flex items-center gap-2">
@@ -512,17 +497,8 @@
                     
                     if (rawDate) {
                         try {
-                            // Perbaikan Logika Zona Waktu (Timezone Fix untuk Indonesia/WIB)
-                            if (typeof rawDate === 'string' && rawDate.length === 10 && rawDate.includes('-')) {
-                                // Jika format dari HTML YYYY-MM-DD murni
-                                let parts = rawDate.split('-');
-                                dateObj = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
-                            } else {
-                                // Jika dari Google Sheets (Contoh: "1985-08-14T17:00:00.000Z")
-                                // Browser akan otomatis menyesuaikan jamnya kembali ke +7 (WIB) yaitu 15 Agustus
-                                let d = new Date(rawDate);
-                                dateObj = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-                            }
+                            // Biarkan Javascript membaca tanggal dari Google dan menyesuaikannya dengan Waktu Indonesia
+                            dateObj = new Date(rawDate);
                             
                             if (!isNaN(dateObj.getTime())) {
                                 dateStrClean = `${dateObj.getFullYear()}-${String(dateObj.getMonth()+1).padStart(2,'0')}-${String(dateObj.getDate()).padStart(2,'0')}`;
